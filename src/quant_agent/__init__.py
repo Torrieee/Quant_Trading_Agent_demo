@@ -9,6 +9,8 @@ Quant Trading Agent package.
 - backtester: 回测引擎
 - agent: TradingAgent 类 - 智能交易 Agent，负责感知、决策、执行、评估
 - optimizer: 自动参数优化模块
+- market_state: 市场状态识别模块
+- position_sizing: 智能仓位管理模块
 """
 
 from .agent import TradingAgent, AgentRunResult, run_agent
@@ -29,6 +31,8 @@ __all__ = [
     "backtester",
     "agent",
     "optimizer",
+    "market_state",
+    "position_sizing",
 ]
 
 
