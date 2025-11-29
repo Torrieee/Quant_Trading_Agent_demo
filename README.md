@@ -189,11 +189,8 @@ result = agent.run()
 
 ## 10. 作者
 
-YOUR NAME
-GitHub: [https://github.com/YOUR_USERNAME](https://github.com/YOUR_USERNAME)
-
-请将 `YOUR_USERNAME` 替换为你的实际用户名。
-
+Torrie Li
+GitHub: [[https://github.com/YOUR_USERNAME](https://github.com/Torrieee)]
 
 ---
 
