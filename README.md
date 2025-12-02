@@ -209,29 +209,20 @@ print(f"平均收益率: {results['mean_return']:.2%}")
 
 ---
 
-## 7. 文档
 
-* `PROJECT_DESCRIPTION.md` - 项目详细说明
-* `RESUME_GUIDE.md` - 简历描述建议
-* `AGENT_IMPROVEMENTS.md` - Agent增强改进方向
-* `RL_GUIDE.md` - 强化学习使用指南
-* `RESUME_DEMO_README.md` - 简历展示Demo使用指南
-
----
-
-## 8. 贡献指南
+## 7. 贡献指南
 
 欢迎提交 Issue 或 Pull Request。
 
 ---
 
-## 9. 许可证
+## 8. 许可证
 
 本项目基于 MIT License 开源，详情见 `LICENSE` 文件。
 
 ---
 
-## 10. 作者
+## 9. 作者
 
 Torrie Li
 GitHub: [https://github.com/Torrieee](https://github.com/Torrieee)
