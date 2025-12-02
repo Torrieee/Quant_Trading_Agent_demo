@@ -88,3 +88,30 @@ models/
 *.bak
 *.swp
 
+# Resume and deployment related files (not core code)
+docs/resume/
+README_RESUME.md
+resume_demo.py
+INTERVIEW_PREPARATION.md
+部署到GitHub_总结.md
+GITHUB_DEPLOYMENT_GUIDE_CN.md
+GITHUB_DEPLOYMENT.md
+GITHUB_QUICK_START.md
+GITHUB_UPLOAD_CHECKLIST.md
+GITHUB_DEPLOY_INSTRUCTIONS.md
+README_GITHUB_UPLOAD.md
+deploy_to_github.ps1
+check_git_status.ps1
+check_upload_files.ps1
+remove_unwanted_files.ps1
+DEPLOYMENT_SUMMARY.md
+
+# Evaluation and analysis documents (not core code)
+LLM_AGENT_EVALUATION.md
+FUNCTION_CALLING_ANALYSIS.md
+MODULE_MAPPING.md
+LLM_DEMO_RESULTS.md
+README_DEMO_RUN.md
+README_LLM_DEMO.md
+docs/deployment/
+
