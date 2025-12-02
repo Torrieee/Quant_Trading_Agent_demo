@@ -115,3 +115,8 @@ README_DEMO_RUN.md
 README_LLM_DEMO.md
 docs/deployment/
 
+# Exclude all README files except the main README.md
+README_*.md
+LLM_FEATURES_README.md
+docs/README.md
+
