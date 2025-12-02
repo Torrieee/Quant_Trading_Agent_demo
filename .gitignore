@@ -25,6 +25,7 @@ wheels/
 venv/
 ENV/
 env/
+quant_agent/  # Conda virtual environment
 
 # IDE
 .vscode/
@@ -36,6 +37,9 @@ env/
 # Data cache
 data_cache/
 *.csv
+
+# Generated outputs (optional - you can keep demo_output/ for showcase)
+# demo_output/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -57,4 +61,30 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
+# Environment variables and secrets
+.env
+.env.local
+*.key
+*.pem
+secrets.yaml
+config.yaml
+config.json
+
+# Models and checkpoints (if large)
+models/
+*.pth
+*.pt
+*.h5
+*.ckpt
+*.zip
+
+# Large data files
+*.h5
+*.hdf5
+*.parquet
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
 

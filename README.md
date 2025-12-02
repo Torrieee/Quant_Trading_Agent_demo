@@ -13,6 +13,9 @@
 * **自动参数优化**：内置网格搜索；
 * **可扩展策略框架**：支持均值回归、动量等策略；
 * **完整回测系统**：包含收益率、夏普比率、最大回撤等指标；
+* **🤖 强化学习支持**：使用RL训练智能交易Agent（PPO、A2C、DQN等算法）；
+* **市场状态识别**：自动识别趋势市、震荡市等市场状态；
+* **智能仓位管理**：凯利公式、风险平价等仓位管理方法；
 * **工程化结构**：使用 Pydantic、Typer 等现代 Python 工具，模块化设计清晰。
 
 ---
@@ -22,7 +25,7 @@
 ### 2.1 克隆项目
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/quant-trading-agent.git
+git clone https://github.com/Torrieee/quant_trading_agent.git
 cd quant-trading-agent
 ```
 
@@ -64,7 +67,15 @@ python quick_demo.py
 python demo.py
 ```
 
-### 3.3 运行单策略回测
+### 3.3 运行简历展示Demo ⭐
+
+```bash
+python resume_demo.py
+```
+
+这是一个综合性的演示脚本，展示项目的所有核心功能，适合用于简历展示和技术面试。
+
+### 3.4 运行单策略回测
 
 ```bash
 python -m scripts.run_agent \
@@ -73,7 +84,7 @@ python -m scripts.run_agent \
     --start 2020-01-01
 ```
 
-### 3.4 参数优化示例
+### 3.5 参数优化示例
 
 ```bash
 python -m scripts.tune_agent \
@@ -154,24 +165,57 @@ result = agent.run()
 * 胜率（Win Rate）
 * 交易次数（Number of Trades）
 
+### 5.5 强化学习训练
+
+使用强化学习训练智能交易Agent：
+
+```python
+from quant_agent import DataConfig
+from quant_agent.rl_trainer import train_rl_agent, evaluate_rl_agent
+import datetime as dt
+
+# 训练RL Agent
+train_data = DataConfig(symbol="AAPL", start=dt.date(2020, 1, 1), end=dt.date(2022, 1, 1))
+model, info = train_rl_agent(
+    data_cfg=train_data,
+    algorithm="PPO",
+    total_timesteps=50000,
+    model_save_path="models/rl_agent.zip",
+)
+
+# 评估Agent
+test_data = DataConfig(symbol="AAPL", start=dt.date(2022, 1, 1), end=dt.date(2023, 1, 1))
+results = evaluate_rl_agent(model=model, data_cfg=test_data)
+print(f"平均收益率: {results['mean_return']:.2%}")
+```
+
+支持的算法：PPO、A2C、DQN、SAC、TD3
+
+详细文档请参考：`RL_GUIDE.md`
+
 ---
 
 ## 6. 技术栈
 
 * Python 3.11+
-* pandas
-* numpy
-* yfinance
-* pydantic
-* typer
-* matplotlib
+* pandas - 数据处理
+* numpy - 数值计算
+* yfinance - 金融数据获取
+* pydantic - 配置管理
+* typer - 命令行接口
+* matplotlib - 数据可视化
+* **gymnasium** - 强化学习环境
+* **stable-baselines3** - RL算法库
 
 ---
 
 ## 7. 文档
 
-* `PROJECT_DESCRIPTION.md`
-* `RESUME_GUIDE.md`
+* `PROJECT_DESCRIPTION.md` - 项目详细说明
+* `RESUME_GUIDE.md` - 简历描述建议
+* `AGENT_IMPROVEMENTS.md` - Agent增强改进方向
+* `RL_GUIDE.md` - 强化学习使用指南
+* `RESUME_DEMO_README.md` - 简历展示Demo使用指南
 
 ---
 
@@ -190,7 +234,7 @@ result = agent.run()
 ## 10. 作者
 
 Torrie Li
-GitHub: [[https://github.com/YOUR_USERNAME](https://github.com/Torrieee)]
+GitHub: [https://github.com/Torrieee](https://github.com/Torrieee)
 
 ---
 

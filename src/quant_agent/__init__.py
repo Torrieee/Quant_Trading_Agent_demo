@@ -11,6 +11,10 @@ Quant Trading Agent package.
 - optimizer: 自动参数优化模块
 - market_state: 市场状态识别模块
 - position_sizing: 智能仓位管理模块
+- rl_env: 强化学习交易环境（Gym接口）
+- rl_trainer: 强化学习训练模块
+- llm_agent: 大模型Agent集成模块（Function Calling、RAG）
+- llm_strategy: LLM驱动的策略生成和解释模块（原创功能）
 """
 
 from .agent import TradingAgent, AgentRunResult, run_agent
@@ -33,6 +37,10 @@ __all__ = [
     "optimizer",
     "market_state",
     "position_sizing",
+    "rl_env",
+    "rl_trainer",
+    "llm_agent",
+    "llm_strategy",
 ]
 
 
