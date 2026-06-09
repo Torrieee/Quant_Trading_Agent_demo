@@ -1,0 +1,36 @@
+- name: mean_reversion_fixture
+  strategy: mean_reversion
+  fixture: sample_ohlcv.csv
+  gate:
+    min_days: 100
+    required_stats:
+      - total_return
+      - annual_return
+      - sharpe
+      - max_drawdown
+      - num_days
+      - num_trades
+      - win_rate
+  report_only:
+    metrics:
+      - sharpe
+      - max_drawdown
+      - total_return
+
+- name: momentum_fixture
+  strategy: momentum
+  fixture: sample_ohlcv.csv
+  gate:
+    min_days: 100
+    required_stats:
+      - total_return
+      - sharpe
+      - max_drawdown
+      - num_days
+      - num_trades
+      - win_rate
+  report_only:
+    metrics:
+      - sharpe
+      - max_drawdown
+      - total_return

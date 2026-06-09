@@ -1,0 +1,125 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+quant_agent/  # Conda virtual environment
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data cache
+data_cache/
+*.csv
+!tests/fixtures/sample_ohlcv.csv
+
+# Harness reports (generated locally / CI artifact)
+reports/
+
+# Generated outputs (optional - you can keep demo_output/ for showcase)
+# demo_output/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environment variables and secrets
+.env
+.env.local
+*.key
+*.pem
+secrets.yaml
+config.yaml
+config.json
+
+# Models and checkpoints (if large)
+models/
+*.pth
+*.pt
+*.h5
+*.ckpt
+*.zip
+
+# Large data files
+*.h5
+*.hdf5
+*.parquet
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Resume and deployment related files (not core code)
+docs/resume/
+README_RESUME.md
+resume_demo.py
+INTERVIEW_PREPARATION.md
+部署到GitHub_总结.md
+GITHUB_DEPLOYMENT_GUIDE_CN.md
+GITHUB_DEPLOYMENT.md
+GITHUB_QUICK_START.md
+GITHUB_UPLOAD_CHECKLIST.md
+GITHUB_DEPLOY_INSTRUCTIONS.md
+README_GITHUB_UPLOAD.md
+deploy_to_github.ps1
+check_git_status.ps1
+check_upload_files.ps1
+remove_unwanted_files.ps1
+DEPLOYMENT_SUMMARY.md
+
+# Evaluation and analysis documents (not core code)
+LLM_AGENT_EVALUATION.md
+FUNCTION_CALLING_ANALYSIS.md
+MODULE_MAPPING.md
+LLM_DEMO_RESULTS.md
+README_DEMO_RUN.md
+README_LLM_DEMO.md
+docs/deployment/
+
+# Exclude all .md files except the main README.md
+*.md
+!README.md
+
