@@ -1,0 +1,55 @@
+{
+  "trace_id": "08d3b790-64f5-4c28-a97a-3c563e3c3c6f",
+  "case_id": "pilot_workflow_report_offline",
+  "parent_trace_id": null,
+  "attempt": 1,
+  "reflection_triggered": false,
+  "reflection_reason": null,
+  "steps": [
+    {
+      "step_id": 1,
+      "rationale": "Pilot 1 — select strategy for ranging market",
+      "tool_name": "get_strategy_recommendation",
+      "arguments": {
+        "market_state": "ranging"
+      },
+      "observation": {
+        "market_state": "ranging",
+        "recommended_strategy": "mean_reversion",
+        "reason": "市场状态为ranging，适合使用mean_reversion策略"
+      },
+      "status": "ok",
+      "latency_ms": 0.02039998071268201,
+      "token_usage": null,
+      "error_type": null,
+      "error_message": null
+    },
+    {
+      "step_id": 2,
+      "rationale": "Pilot 1 — size position for workflow report",
+      "tool_name": "calculate_position_size",
+      "arguments": {
+        "method": "kelly",
+        "win_rate": 0.55,
+        "avg_win": 0.02,
+        "avg_loss": 0.01
+      },
+      "observation": {
+        "method": "kelly",
+        "position_size": 0.08125000000000002,
+        "parameters": {
+          "win_rate": 0.55,
+          "avg_win": 0.02,
+          "avg_loss": 0.01
+        }
+      },
+      "status": "ok",
+      "latency_ms": 0.009100011084228754,
+      "token_usage": null,
+      "error_type": null,
+      "error_message": null
+    }
+  ],
+  "is_sample": true,
+  "note": "Example trace; fields illustrate rationale / tool_call / observation."
+}

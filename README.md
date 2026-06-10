@@ -6,7 +6,7 @@
 
 本项目是一个完整的量化交易 Agent 框架，实现了从数据获取、策略构建、回测执行到参数优化的自动化流程。核心基于面向对象设计，通过 `TradingAgent` 统一组织感知（Perceive）、决策（Decide）、执行（Act）、评估（Evaluate）等步骤。
 
-在此基础上扩展了 **Agent Quality Harness**：YAML 驱动用例、JSON 评估报告、离线质量门禁（`--gate`）与 GitHub Actions CI，面向 AI Agent 研发质量效能场景（结果完整性 / 流程 trace / LLM tool schema 契约）。
+在此基础上扩展了 **Agent Harness Phase 2**：在原交易 Agent 外新增外层编排与质量评估层——多工具任务编排、enriched trace（rationale / tool_call / observation）、rule-based evaluator、deterministic reflection retry，以及 4 条 **pilot** 离线验证；CI 跑 `pytest` + `--gate`（rule-only，不含 LLM Judge）。
 
 ## 1. 项目特性
 
@@ -19,7 +19,8 @@
 * **市场状态识别**：自动识别趋势市、震荡市等市场状态；
 * **智能仓位管理**：凯利公式、风险平价等仓位管理方法；
 * **工程化结构**：使用 Pydantic、Typer 等现代 Python 工具，模块化设计清晰；
-* **Agent 质量效能体系**：`harness/` 离线评估 + `tool_compliance` schema 契约测试 + CI 质量门禁（Gate 不以 Sharpe 等盈亏指标作为门禁）。
+* **Agent Harness Phase 2**：五层编排（Perception→Planner→Executor→Evaluator→Reflection）+ enriched trace + evidence coverage / efficiency 评估 + pilot benchmark（4 条均可 offline）。
+* **MCP-style tool schema**：`tool_compliance` 契约测试（不写 MCP server / integration）。
 
 ---
 
@@ -96,9 +97,13 @@ python examples_llm_agent.py
 python -m pytest tests/ -v
 python scripts/run_harness.py --report reports/harness_report.json
 python scripts/run_harness.py --gate
+python scripts/run_pilot_benchmark.py
+python scripts/replay_trace.py reports/traces/<case>_attempt1.json --required-evidence-keys position_size
 ```
 
-`--gate` 在 schema / process / tool 结构性检查失败时 exit 1；**不以 Sharpe 等盈亏指标作为门禁**。
+`--gate` 在 schema / process / tool / chain 结构性检查失败时 exit 1；**不以 Sharpe 等盈亏指标作为门禁**。
+
+Pilot benchmark 默认 **offline** 跑满 4 条任务；`--live` 为可选增强（MVP 仍用 offline plan）。样例 trace / 报告见 `reports/examples/`。
 
 ### 3.5 运行单策略回测
 
@@ -131,15 +136,20 @@ Quant_Trading_Agent_demo/
 │   ├── agent.py              # TradingAgent（Perceive-Decide-Act-Evaluate）
 │   ├── backtester.py         # 回测引擎
 │   ├── llm_agent.py          # LLM Function Calling
-│   ├── harness/              # Agent Quality Harness
-│   │   ├── cases/            # YAML 用例
-│   │   └── evaluators/       # 结果 / 流程 / tool 合规
+│   ├── harness/              # Agent Harness Phase 2
+│   │   ├── orchestrator.py   # 五层编排
+│   │   ├── trace.py          # rationale / tool_call / observation
+│   │   ├── cases/            # backtest / tool / chain / pilot YAML
+│   │   └── evaluators/       # result / process / tool / evidence / efficiency
 │   └── ...
-├── tests/                      # backtester / pipeline / tool_compliance
+├── reports/examples/           # 样例 trace + pilot 报告（可 commit）
+├── tests/                      # backtester / pipeline / tool_chain / pilot
 ├── scripts/
 │   ├── run_agent.py
 │   ├── tune_agent.py
-│   └── run_harness.py          # 质量 Harness + --gate
+│   ├── run_harness.py          # 质量 Harness + --gate
+│   ├── run_pilot_benchmark.py  # 4 条 pilot 离线验证
+│   └── replay_trace.py         # trace 离线 replay
 ├── setup.ps1                   # Windows 一键建 .venv
 ├── demo.py
 ├── requirements.txt
@@ -220,40 +230,77 @@ print(f"平均收益率: {results['mean_return']:.2%}")
 
 ---
 
-## 6. Agent 质量效能体系
+## 6. Agent Harness Phase 2
 
-Quant Trading Agent 是**被测系统**，`harness/` 是**质量层**（思路类似飞书 AI Harness：多维评估 + 离线可跑 + CI 门禁）。
+### 6.1 TradingAgent vs Agent Harness（两套 loop，勿混淆）
 
-### 6.1 三维评估（Gate 不看盈亏）
+| | **TradingAgent**（原有） | **Agent Harness**（新增） |
+|---|---|---|
+| 流程 | Perceive → Decide → Act → Evaluate | Perception → Planner → Executor → Evaluator → Reflection |
+| 类比 | 领域能力 / 被调用组件 | **外层编排器 + 测试台** |
+| 作用 | 交易/回测 domain pipeline | 多工具任务编排、trace、评估、retry |
 
-| 维度 | 验证什么 | Gate 检查 |
-|------|----------|-----------|
-| **结果完整性** | stats 字段齐全、无 NaN | `result_schema_valid`, `no_nan_metrics`, `num_days_valid` |
-| **流程 trace** | perceive→decide→act→evaluate | phase 级 `process_trace`，每步 `output_keys` 非空 |
-| **tool_compliance** | LLM 工具 schema 契约 | 6 项确定性检查（见下） |
+> **TradingAgent** is the original domain pipeline for trading/backtesting.  
+> **Agent Harness** is an outer orchestration and quality-evaluation layer for multi-tool LLM tasks.
 
-盈亏指标（Sharpe、回撤等）写入 JSON 报告的 `report_only` 段，**不参与 exit 1**。
+### 6.2 Trace 字段
 
-### 6.2 亮点：tool_compliance（schema 契约测试）
+记录 **rationale / tool_call / observation / latency**（`tool_call = tool_name + arguments`），不写 `thought`（避免暗示完整 CoT）。Reflection 生成 **child trace**，report 保留首轮与 retry 的 before/after。
 
-对 `TradingFunctionCaller.get_available_functions()` 做 **确定性** 检查，比「LLM 是否选对 tool」更适合 CI：
+样例见 [`reports/examples/sample_trace.json`](reports/examples/sample_trace.json)。
 
-- `schema_fields_present` — name / description / parameters
-- `required_args_present` — required 字段声明正确
-- `enum_values_valid` — enum 约束合法
-- `mock_arguments_parseable` — mock 参数可执行
-- `handler_returns_expected_keys` — 路由返回预期结构
-- `invalid_arguments_raise_clear_error` — 非法参数返回明确错误
+### 6.3 离线 Evaluator（CI `--gate`）
 
-### 6.3 本地运行与 CI
+| 指标 | 模块 | CI Gate? |
+|------|------|----------|
+| 结果完整性 | `result_quality` | 是（backtest case） |
+| 流程 trace | `process_quality` | 是（backtest case） |
+| tool correctness | `tool_compliance` | 是 |
+| evidence coverage | `evidence_coverage` | 是（chain / pilot case） |
+| efficiency | `efficiency` | step_count / max_steps 可 gate；**latency_ms 仅 report** |
+| answer grounding | LLM-as-Judge | **仅 `--live` optional**（不进 CI） |
+
+> Offline gate covers **tool correctness, evidence coverage, and efficiency**.  
+> **Answer grounding** is evaluated only in optional `--live` mode via LLM-as-Judge.
+
+盈亏指标（Sharpe 等）写入 `report_only`，**不参与 exit 1**。
+
+### 6.4 MCP-style tool schema（非 MCP server）
+
+对 `TradingFunctionCaller` 做 **MCP-style / MCP-inspired** schema 契约测试（6 项确定性检查）。**不写** MCP integration / MCP server。
+
+### 6.5 Deterministic Reflection（CI-safe）
+
+仅当 YAML case 显式 `reflection.enabled: true` 时触发；`on_failure_retry` **必须显式声明**补救 tool，最多 1 轮。CI 以 **final attempt** 定 pass/fail，report 保留 `first_attempt_failed`。
+
+### 6.6 Pilot Benchmark（4 条，均可 offline）
+
+```bash
+python scripts/run_pilot_benchmark.py
+python scripts/run_pilot_benchmark.py --write-examples   # 更新 reports/examples/
+```
+
+4 条 pilot 任务定义于 `src/quant_agent/harness/cases/pilot_tasks.yaml`。无 API 可跑满 4 条并输出 tool correctness / evidence coverage / efficiency 分项报告。样例 benchmark 见 [`reports/examples/sample_pilot_benchmark.json`](reports/examples/sample_pilot_benchmark.json)（含 `is_sample: true`）。
+
+### 6.7 本地运行与 CI
 
 ```bash
 python -m pytest tests/ -v
-python scripts/run_harness.py --report reports/harness_report.json
 python scripts/run_harness.py --gate
 ```
 
-推送至 `main` 后，[GitHub Actions](https://github.com/Torrieee/Quant_Trading_Agent_demo/actions) 自动执行相同检查（pytest + harness gate）。
+推送至 `main` 后，[GitHub Actions](https://github.com/Torrieee/Quant_Trading_Agent_demo/actions) 自动执行 pytest + harness gate（**不含** `--live`、LLM Judge、pilot benchmark）。
+
+### 6.8 Optional `--live`（本地 pilot 分析，不进 CI）
+
+需设置 `OPENAI_API_KEY`：
+
+```bash
+python scripts/run_harness.py --live
+python scripts/run_pilot_benchmark.py --live
+```
+
+`--live` 可选启用 LLM Planner / LLM-as-Judge / LLM Reflection；Judge 输出做 JSON schema 校验，失败时 **fallback 到 rule-only**。报告含 `model` / `prompt_version` / `timestamp`。
 
 ---
 

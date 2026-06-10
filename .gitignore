@@ -39,8 +39,13 @@ data_cache/
 *.csv
 !tests/fixtures/sample_ohlcv.csv
 
-# Harness reports (generated locally / CI artifact)
-reports/
+# Harness runtime outputs (keep reports/examples/ for repo samples)
+reports/traces/
+reports/test_traces/
+reports/harness_report.json
+reports/harness_debug.json
+reports/pilot_benchmark.json
+reports/pilot_benchmark.md
 
 # Generated outputs (optional - you can keep demo_output/ for showcase)
 # demo_output/

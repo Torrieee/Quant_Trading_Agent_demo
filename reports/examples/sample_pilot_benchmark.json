@@ -1,0 +1,71 @@
+{
+  "run_id": "04515433-6bf2-4298-9041-94d74b4d4d01",
+  "timestamp": "2026-06-10T09:53:12.154980+00:00",
+  "mode": "offline",
+  "pilot_task_count": 4,
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "pass_rate": 1.0,
+    "tool_correctness_rate": 1.0,
+    "evidence_coverage_rate": 1.0,
+    "reflection_first_attempt_failed_count": 1
+  },
+  "tasks": [
+    {
+      "task_id": "pilot_workflow_report_offline",
+      "passed": true,
+      "tool_correctness": true,
+      "evidence_coverage_pass": true,
+      "efficiency": {
+        "step_count": 2,
+        "total_latency_ms": 2.256
+      },
+      "first_attempt_failed": false,
+      "attempt_count": 1,
+      "failures": []
+    },
+    {
+      "task_id": "pilot_market_strategy_offline",
+      "passed": true,
+      "tool_correctness": true,
+      "evidence_coverage_pass": true,
+      "efficiency": {
+        "step_count": 2,
+        "total_latency_ms": 0.033
+      },
+      "first_attempt_failed": false,
+      "attempt_count": 1,
+      "failures": []
+    },
+    {
+      "task_id": "pilot_volatility_sizing_offline_or_live",
+      "passed": true,
+      "tool_correctness": true,
+      "evidence_coverage_pass": true,
+      "efficiency": {
+        "step_count": 2,
+        "total_latency_ms": 0.01
+      },
+      "first_attempt_failed": false,
+      "attempt_count": 1,
+      "failures": []
+    },
+    {
+      "task_id": "pilot_evidence_repair_offline_or_live",
+      "passed": true,
+      "tool_correctness": true,
+      "evidence_coverage_pass": true,
+      "efficiency": {
+        "step_count": 1,
+        "total_latency_ms": 0.006
+      },
+      "first_attempt_failed": true,
+      "attempt_count": 2,
+      "failures": []
+    }
+  ],
+  "is_sample": true,
+  "generated_by": "offline demo run",
+  "note": "Example output for repository display; rerun scripts/run_pilot_benchmark.py for current results."
+}

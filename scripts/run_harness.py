@@ -21,9 +21,14 @@ def main() -> None:
         action="store_true",
         help="Exit 1 if any case fails structural quality checks",
     )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Optional LLM Planner/Judge/Reflection (not used in CI)",
+    )
     args = parser.parse_args()
 
-    report = run_harness(report_path=args.report, gate=args.gate)
+    report = run_harness(report_path=args.report, gate=args.gate, live=args.live)
     summary = report["summary"]
     print(
         f"Harness: {summary['passed']}/{summary['total']} passed "

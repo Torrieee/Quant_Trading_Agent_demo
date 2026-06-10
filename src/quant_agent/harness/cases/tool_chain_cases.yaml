@@ -1,0 +1,89 @@
+- name: market_to_strategy_chain
+  mode: offline
+  plan:
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: ranging
+      rationale: Select strategy for ranging market
+    - tool: calculate_position_size
+      arguments:
+        method: kelly
+        win_rate: 0.55
+        avg_win: 0.02
+        avg_loss: 0.01
+      rationale: Size position using Kelly criterion
+  gate:
+    max_steps: 6
+    required_evidence_keys:
+      - position_size
+    expected_final_keys:
+      - position_size
+
+- name: strategy_then_risk_parity
+  mode: offline
+  plan:
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: trending_up
+    - tool: calculate_position_size
+      arguments:
+        method: risk_parity
+        volatility: 0.18
+  gate:
+    max_steps: 6
+    expected_final_keys:
+      - position_size
+      - recommended_strategy
+
+- name: max_steps_exceeded_should_fail
+  harness: false
+  mode: offline
+  plan:
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: ranging
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: trending_up
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: trending_down
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: high_volatility
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: low_volatility
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: ranging
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: trending_up
+  gate:
+    max_steps: 3
+    expect_plan_over_max: true
+
+- name: evidence_retry_chain
+  mode: offline
+  plan:
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: ranging
+      rationale: First attempt without position sizing
+  gate:
+    max_steps: 6
+    required_evidence_keys:
+      - position_size
+  reflection:
+    enabled: true
+    max_attempts: 1
+    on_failure_retry:
+      missing_evidence:
+        - tool: calculate_position_size
+          arguments:
+            method: kelly
+            win_rate: 0.55
+            avg_win: 0.02
+            avg_loss: 0.01
+          rationale: Retry with position sizing after missing evidence

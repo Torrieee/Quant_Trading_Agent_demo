@@ -18,6 +18,8 @@ from ..llm_agent import TradingFunctionCaller
 from .evaluators.process_quality import build_process_trace, validate_process_trace
 from .evaluators.result_quality import validate_result_quality
 from .evaluators.tool_compliance import run_tool_compliance_checks, validate_tool_schemas
+from .orchestrator import AgentHarnessOrchestrator
+from .tool_adapter import HarnessToolAdapter
 
 HARNESS_ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = HARNESS_ROOT.parents[2]
@@ -43,8 +45,18 @@ def _load_yaml_cases(filename: str) -> list[dict[str, Any]]:
 
 
 class HarnessRunner:
-    def __init__(self) -> None:
+    def __init__(self, *, live: bool = False) -> None:
+        self.live = live
         self.caller = TradingFunctionCaller()
+        self.orchestrator = AgentHarnessOrchestrator(
+            adapter=HarnessToolAdapter(self.caller),
+            live=live,
+        )
+
+    def run_agent_task_case(
+        self, case: dict[str, Any], *, write_trace: bool = True
+    ) -> dict[str, Any]:
+        return self.orchestrator.run_case(case, write_trace=write_trace)
 
     def run_backtest_case(self, case: dict[str, Any]) -> dict[str, Any]:
         case_id = case["name"]
@@ -134,11 +146,16 @@ class HarnessRunner:
         for case in _load_yaml_cases("llm_tool_cases.yaml"):
             results.append(self.run_tool_case(case))
 
+        for case in _load_yaml_cases("tool_chain_cases.yaml"):
+            if case.get("harness", True):
+                results.append(self.run_agent_task_case(case))
+
         passed = sum(1 for r in results if r["passed"])
         failed = len(results) - passed
         return {
             "run_id": str(uuid.uuid4()),
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": "live" if self.live else "offline",
             "summary": {
                 "passed": passed,
                 "failed": failed,
@@ -149,8 +166,13 @@ class HarnessRunner:
         }
 
 
-def run_harness(*, report_path: Path | None = None, gate: bool = False) -> dict[str, Any]:
-    report = HarnessRunner().run_all()
+def run_harness(
+    *,
+    report_path: Path | None = None,
+    gate: bool = False,
+    live: bool = False,
+) -> dict[str, Any]:
+    report = HarnessRunner(live=live).run_all()
     if report_path:
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(

@@ -1,0 +1,84 @@
+# 4 pilot tasks — all runnable offline; --live optionally enhances planner/reflection (Day3+).
+
+- name: pilot_workflow_report_offline
+  mode: offline
+  plan:
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: ranging
+      rationale: Pilot 1 — select strategy for ranging market
+    - tool: calculate_position_size
+      arguments:
+        method: kelly
+        win_rate: 0.55
+        avg_win: 0.02
+        avg_loss: 0.01
+      rationale: Pilot 1 — size position for workflow report
+  gate:
+    max_steps: 6
+    required_evidence_keys:
+      - position_size
+    expected_final_keys:
+      - position_size
+
+- name: pilot_market_strategy_offline
+  mode: offline
+  plan:
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: trending_up
+      rationale: Pilot 2 — strategy for uptrend
+    - tool: calculate_position_size
+      arguments:
+        method: risk_parity
+        volatility: 0.18
+      rationale: Pilot 2 — risk-parity sizing
+  gate:
+    max_steps: 6
+    expected_final_keys:
+      - position_size
+      - recommended_strategy
+
+- name: pilot_volatility_sizing_offline_or_live
+  mode: offline_or_live
+  task_hint: Recommend strategy for low volatility and size with volatility targeting
+  offline_plan:
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: low_volatility
+      rationale: Pilot 3 — low-vol regime strategy
+    - tool: calculate_position_size
+      arguments:
+        method: volatility_targeting
+        volatility: 0.12
+      rationale: Pilot 3 — volatility-target sizing
+  live_planner_enabled: true
+  gate:
+    max_steps: 6
+    required_evidence_keys:
+      - position_size
+
+- name: pilot_evidence_repair_offline_or_live
+  mode: offline_or_live
+  offline_plan:
+    - tool: get_strategy_recommendation
+      arguments:
+        market_state: ranging
+      rationale: Pilot 4 — first attempt without sizing evidence
+  live_reflection_enabled: true
+  gate:
+    max_steps: 6
+    required_evidence_keys:
+      - position_size
+  reflection:
+    enabled: true
+    max_attempts: 1
+    on_failure_retry:
+      missing_evidence:
+        - tool: calculate_position_size
+          arguments:
+            method: kelly
+            win_rate: 0.52
+            avg_win: 0.018
+            avg_loss: 0.012
+          rationale: Pilot 4 — deterministic retry for missing evidence
