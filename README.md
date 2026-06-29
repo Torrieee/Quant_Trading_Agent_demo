@@ -20,6 +20,7 @@
 | **Agentic 工作流** | 固定拓扑 + 代码 Supervisor 路由：`analysis_panel → document_retrieval → research → [reflection] → risk → reporter` |
 | **节点类型** | 规则节点（`analysis_panel`）、检索节点（`document_retrieval`）、Agent 节点（Research/Risk 的 ReAct）、报告节点（`reporter`） |
 | **ReAct 工具** | Research / Risk 通过 `react_loop` 由模型决定工具调用与停止 |
+| **动态 Research 子图** | `enable_dynamic_research` 时使用 Planner → Workers → Verifier → Synthesizer；仅 Market/Evidence Worker 通过 LangGraph `Send` 并行执行，Reducer 按 `task_id` 去重合并，Strategy 在 join 后顺序执行，Verifier 失败时按 `max_replan` 有限重规划（默认 1 次） |
 | **Evidence / RAG** | SEC/seed/profile + Hybrid 检索 + episodic/semantic memory + `document_signal` 决策修正 |
 | **HITL** | Demo 用 `interrupt_before=["risk"]` + checkpoint；`QuantEngine.resume()` 继续（正式审批可升级为节点内 `interrupt()`） |
 | **可观测** | `trace_steps`、JSON trace 导出、可选 Langfuse |
@@ -28,6 +29,8 @@
 | **Context Engine** | `context/` 模块：token 预算、去重、来源配额、`context_manifest` |
 | **Retrieval Eval** | `retrieval_v1`（Recall@K / MRR 消融，无 LLM） |
 | **经典量化** | `TradingAgent` 回测、参数优化 |
+
+> 动态 Research 当前不是“任意数量 Worker”的通用 fan-out：Planner 会产生 `evidence`、`market`、`strategy` 等固定类型任务，其中 `evidence` / `market` 可并行，依赖合并结果的 `strategy` 在汇合后顺序执行。
 
 ---
 
@@ -93,7 +96,7 @@ python scripts/run_dashboard.py
 
 | 页面 | 用途 |
 |------|------|
-| **分析工作台** | 跑全链路、动态 Research、HITL、Context 预算 |
+| **分析工作台** | 跑全链路、动态 Research（Market/Evidence 并行 + Strategy 顺序）、HITL、Context 预算 |
 | **评测中心** | 一键跑 regression / retrieval / reliability |
 | **记忆与上下文** | 查看 memory_meta、semantic、检索结果 |
 
@@ -246,7 +249,7 @@ print(report["scorecard"]["summary"])
 | `python scripts/run_eval.py` | Agent 离线/Live 回归评测 |
 | `python scripts/run_retrieval_eval.py` | 检索 Recall@K / MRR 消融 |
 | `python scripts/run_reliability_eval.py` | pass^k 稳定性 + 工具故障注入 |
-| `python scripts/run_runtime_agent.py` | 手动 DeepSeek 联调 |
+| `python scripts/run_runtime_agent.py` | 内部 runtime case 联调（需 `DEEPSEEK_API_KEY`） |
 
 ---
 

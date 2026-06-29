@@ -93,10 +93,10 @@ Planner → Workers → Verifier → [Replan bump → Planner] → Synthesizer
 - 规则 Verifier；失败时 `replan_count` +1，最多 `max_replan`（默认 1）次
 - Synthesizer 合并 `research_findings` 写入 `quant_state`
 
-**尚未实现**
+**当前边界**
 
-- LangGraph 并行 Worker 与 map-reduce state 合并
-- 动态 Worker 数量、依赖调度、跨 Worker 去重
+- 已实现 LangGraph `Send` 并行与 reducer 合并，但并行范围限定为 **market + evidence** 两类 Worker
+- 尚未实现任意数量动态 Worker、通用依赖图调度或 LLM 自动扩展 Worker 类型
 - 基于 LLM 的 Planner / Verifier（当前为规则，保证 Demo / CI 可离线跑）
 
 ### 2.4 预算与终止
