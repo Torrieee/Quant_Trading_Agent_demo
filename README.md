@@ -1,6 +1,6 @@
 # Quant Research Agent
 
-[![CI](https://github.com/Torrieee/Quant_Trading_Agent_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/Torrieee/Quant_Trading_Agent_demo/actions/workflows/ci.yml)
+[![CI](https://github.com/Torrieee/Quant_Research_Agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Torrieee/Quant_Research_Agent/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -39,8 +39,8 @@
 ### 2.1 克隆与安装
 
 ```bash
-git clone https://github.com/Torrieee/Quant_Trading_Agent_demo.git
-cd Quant_Trading_Agent_demo
+git clone https://github.com/Torrieee/Quant_Research_Agent.git
+cd Quant_Research_Agent
 ```
 
 **Windows（推荐）**
@@ -151,7 +151,7 @@ GitHub Actions 需在仓库 Secrets 配置 `DEEPSEEK_API_KEY` 后才会跑 Live 
 ## 5. 项目结构
 
 ```
-Quant_Trading_Agent_demo/
+Quant_Research_Agent/
 ├── .github/workflows/ci.yml
 ├── evalsets/
 │   ├── regression_v1.yaml      # 离线回归 15 条
