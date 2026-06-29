@@ -1,7 +1,7 @@
 # Agent 回归评测集 v1 — FIXTURE + 假模型，CI 可跑，无需 API Key
 # 说明: docs/EVAL.md | 运行: python scripts/run_eval.py
 evalset_id: regression_v1
-description: QuantEngine 多智能体离线回归（编排 / 工具 / RAG / Memory / 风控 / HITL）
+description: QuantEngine Agentic Workflow 离线回归（编排 / 工具 / RAG / Memory / 风控 / HITL / 动态 Research）
 model: fake
 defaults:
   symbol: FIXTURE
@@ -146,3 +146,77 @@ cases:
     expect_after_resume:
       required_tools:
         - calculate_position_size
+
+  - name: mem_lifecycle_consolidation
+    tags: [memory]
+    task: 结合历史记录评估 FIXTURE 策略倾向
+    setup:
+      episodic:
+        - case_id: mem_c1
+          signal: hold
+          confidence: 60
+          task: prior hold
+          report: "# Prior 1\n\nhold mean_reversion"
+          final_state: {recommended_strategy: mean_reversion}
+        - case_id: mem_c2
+          signal: hold
+          confidence: 65
+          task: prior hold 2
+          report: "# Prior 2\n\nhold mean_reversion"
+          final_state: {recommended_strategy: mean_reversion}
+      ensure_index: true
+    expect:
+      semantic_memory_nonempty: true
+
+  - name: mem_skip_duplicate_write
+    tags: [memory]
+    task: 震荡市下为 FIXTURE 推荐策略并完成风控与报告
+    setup:
+      episodic:
+        - case_id: mem_dup_seed
+          signal: hold
+          confidence: 65
+          task: seed
+          report: "# Seed\n\nhold"
+          final_state: {recommended_strategy: mean_reversion}
+      ensure_index: true
+    expect:
+      memory_skip_write: true
+
+  - name: mem_current_evidence_over_prior
+    tags: [memory, evidence]
+    task: 评估 FIXTURE 当前供应链与运营风险，给出投资建议
+    setup:
+      episodic:
+        - case_id: mem_low_risk_prior
+          signal: buy
+          confidence: 80
+          task: Prior analysis concluded low operational risk
+          report: "# Prior\n\nPrior session recommended BUY with low supply chain concern."
+          final_state: {recommended_strategy: momentum}
+      extra_docs:
+        - title: Current quarter operational update
+          text: >
+            Significant supply chain concentration in Asia with manufacturing
+            disruptions and elevated operational risk reported this quarter.
+      ensure_index: true
+    expect:
+      episodic_memory_nonempty: true
+      risk_flags_contains: [supply_chain]
+      document_signal_applied: true
+
+  - name: research_dynamic_supply_chain
+    tags: [orchestration, research]
+    task: 评估 FIXTURE 供应链与亚洲制造集中风险，推荐策略并完成风控
+    workflow_flags:
+      enable_dynamic_research: true
+    gate:
+      required_evidence_keys:
+        - recommended_strategy
+        - position_size
+    expect:
+      required_tools:
+        - search_evidence
+        - get_strategy_recommendation
+        - calculate_position_size
+      research_findings_min: 2

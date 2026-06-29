@@ -112,6 +112,7 @@ class QuantEngine:
         include_sentiment: bool = True,
         include_research_analyst: bool = True,
         enable_reflection: bool = False,
+        enable_dynamic_research: bool = False,
         analysis_data: dict[str, Any] | None = None,
         case_id: str = "engine_analyze",
         thread_id: str | None = None,
@@ -143,6 +144,7 @@ class QuantEngine:
                 "include_sentiment": include_sentiment,
                 "include_research_analyst": include_research_analyst,
                 "enable_reflection": enable_reflection,
+                "enable_dynamic_research": enable_dynamic_research,
             }
 
             tid = thread_id or case_id
@@ -180,7 +182,7 @@ class QuantEngine:
 
             if result.success and result.report and not result.interrupted:
                 try:
-                    self.evidence_retriever.ingest_episodic_session(
+                    chunk = self.evidence_retriever.ingest_episodic_session(
                         symbol,
                         case_id=case_id,
                         task=task_text,
@@ -190,6 +192,8 @@ class QuantEngine:
                         report=result.report,
                         final_state=result.final_state,
                     )
+                    result.final_state.setdefault("memory_lifecycle", {})
+                    result.final_state["memory_lifecycle"]["last_write_skipped"] = chunk is None
                 except Exception:
                     pass
 

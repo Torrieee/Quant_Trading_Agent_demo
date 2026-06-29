@@ -1,4 +1,8 @@
-"""Supervisor 路由节点。"""
+"""Supervisor 路由节点。
+
+纯代码规则路由（非 LLM）：根据 WorkflowState 标志位选择下一业务节点。
+所有允许的状态转移在 `_choose_next()` 中定义，属于固定拓扑、受约束路由。
+"""
 
 from __future__ import annotations
 

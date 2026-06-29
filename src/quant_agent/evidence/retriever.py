@@ -8,6 +8,7 @@ from typing import Any
 from .document_rules import build_document_flags, extract_risk_flags
 from .ingest import build_symbol_chunks
 from .memory import build_episodic_chunk, is_episodic_chunk, merge_chunk_lists
+from .memory_lifecycle import ingest_with_lifecycle, is_memory_expired, load_memory_meta
 from .models import EvidenceChunk
 from .persistence import load_symbol_chunks, save_symbol_chunks
 from .query_expand import expand_query
@@ -175,14 +176,30 @@ class EvidenceRetriever:
         risk_reason: str | None,
         report: str | None,
         final_state: dict[str, Any] | None = None,
-    ) -> EvidenceChunk:
-        """分析结束后写入结构化 Episodic Memory 并持久化。"""
+    ) -> EvidenceChunk | None:
+        """分析结束后写入结构化 Episodic Memory（含生命周期决策）并持久化。"""
         sym = symbol.upper()
         if not self._index.has_symbol(sym):
             self._load_persisted(sym)
 
-        chunk = build_episodic_chunk(
-            sym,
+        existing = self._index.get_chunks(sym)
+        recent = [c for c in existing if is_episodic_chunk(c)]
+
+        def _merge(ex: list[EvidenceChunk], new: list[EvidenceChunk]) -> list[EvidenceChunk]:
+            return merge_chunk_lists(ex, new)
+
+        def _save_chunks(merged: list[EvidenceChunk]) -> None:
+            self._index.upsert(sym, merged, updated_at=self._now_iso())
+            self._persist(sym)
+
+        def _semantic(sym_: str, rep: str | None, dec: dict, cid: str) -> list:
+            return ingest_semantic_from_session(sym_, report=rep, decision=dec, case_id=cid)
+
+        def _reindex(sym_: str) -> None:
+            self.ensure_index(sym_)
+
+        return ingest_with_lifecycle(
+            symbol=sym,
             case_id=case_id,
             task=task,
             decision=decision,
@@ -190,22 +207,13 @@ class EvidenceRetriever:
             risk_reason=risk_reason,
             report=report,
             final_state=final_state,
+            recent_episodic=recent,
+            existing_chunks=existing,
+            merge_fn=_merge,
+            persist_fn=_save_chunks,
+            semantic_ingest_fn=_semantic,
+            reindex_fn=_reindex,
         )
-        existing = self._index.get_chunks(sym)
-        merged = merge_chunk_lists(existing, [chunk])
-        self._index.upsert(sym, merged, updated_at=self._now_iso())
-        self._persist(sym)
-        try:
-            ingest_semantic_from_session(
-                sym,
-                report=report,
-                decision=decision,
-                case_id=case_id,
-            )
-            self.ensure_index(sym)
-        except Exception:
-            pass
-        return chunk
 
     def ingest_analysis_report(self, symbol: str, report: str) -> None:
         """兼容旧接口：转为 episodic ingest 的简化路径。"""

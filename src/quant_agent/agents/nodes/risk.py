@@ -44,6 +44,7 @@ def make_risk_node(adapter: Any, model: Any | None = None):
             ),
             task=state.get("task") or "计算合适仓位。",
             context=quant_state,
+            symbol=state.get("symbol"),
         )
         step_count, quant_state, react_failures = run_tool_react_loop(
             adapter=adapter,

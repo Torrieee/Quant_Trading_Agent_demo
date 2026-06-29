@@ -1,0 +1,35 @@
+# 检索评测 v1 — 离线 Recall@K / MRR 与消融
+# 运行: python scripts/run_retrieval_eval.py
+evalset_id: retrieval_v1
+symbol: FIXTURE
+primary_variant: hybrid+rerank
+
+benchmark:
+  min_recall_at_k: 0.5
+  min_mrr: 0.5
+
+cases:
+  - name: supply_chain_risk
+    query: supply chain concentration Asia manufacturing
+    relevant_doc_ids:
+      - FIXTURE_10-K_0
+    relevant_keywords:
+      - supply chain
+      - asia
+
+  - name: disruption_material
+    query: disruption materially affect quarterly results
+    relevant_doc_ids:
+      - FIXTURE_10-K_0
+    relevant_keywords:
+      - disruption
+      - quarterly
+
+  - name: single_source_components
+    query: single-source components vendor risk
+    relevant_doc_ids:
+      - FIXTURE_10-K_0
+    relevant_keywords:
+      - single-source
+
+extra_docs: []

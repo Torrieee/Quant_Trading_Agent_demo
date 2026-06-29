@@ -81,10 +81,15 @@ def build_agent_messages(
     system: str,
     task: str,
     context: dict[str, Any] | None = None,
+    symbol: str | None = None,
 ) -> list[BaseMessage]:
     from langchain_core.messages import HumanMessage, SystemMessage
 
+    from ..context import pack_workflow_context
+
     user = task
     if context:
-        user = f"{task}\n\n上下文:\n{json.dumps(context, ensure_ascii=False, default=str)}"
+        packed, manifest = pack_workflow_context(context, task=task, symbol=symbol)
+        context["context_manifest"] = manifest.to_dict()
+        user = packed
     return [SystemMessage(content=system), HumanMessage(content=user)]

@@ -17,6 +17,12 @@ class WorkflowState(TypedDict, total=False):
     preliminary_decision: dict[str, Any] | None
     research_complete: bool
     reflection_complete: bool
+    # 动态 Research 子图
+    research_plan: list[dict[str, Any]]
+    research_findings: list[dict[str, Any]]
+    research_verification: dict[str, Any] | None
+    replan_count: int
+    max_replan: int
     risk_verdict: str | None
     risk_reason: str | None
     report: str | None
@@ -82,6 +88,11 @@ def initial_state(
         retrieval_complete=False,
         reflection_complete=False,
         research_complete=False,
+        research_plan=[],
+        research_findings=[],
+        research_verification=None,
+        replan_count=0,
+        max_replan=gate.get("max_replan", 1),
         risk_verdict=None,
         risk_reason=None,
         report=None,

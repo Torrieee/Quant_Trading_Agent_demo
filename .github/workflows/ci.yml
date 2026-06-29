@@ -30,6 +30,12 @@ jobs:
       - name: Run offline agent regression eval
         run: python scripts/run_eval.py --evalset evalsets/regression_v1.yaml --output reports/eval_regression_v1.json
 
+      - name: Run retrieval eval
+        run: python scripts/run_retrieval_eval.py --output reports/eval_retrieval_v1.json
+
+      - name: Run reliability eval
+        run: python scripts/run_reliability_eval.py --output reports/eval_reliability_v1.json
+
       - name: Upload offline eval report
         if: always()
         uses: actions/upload-artifact@v4

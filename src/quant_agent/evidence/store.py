@@ -12,6 +12,7 @@ import numpy as np
 from .config import hybrid_alpha, search_mode
 from .embeddings import cosine_similarity, get_embedding_backend
 from .memory import is_episodic_chunk
+from .memory_lifecycle import is_memory_expired, load_memory_meta, memory_score_multiplier
 from .models import EvidenceChunk, SymbolIndex
 
 
@@ -152,6 +153,10 @@ class HybridEvidenceIndex:
         mult = _recency_multiplier(chunk)
         if prefer_episodic and is_episodic_chunk(chunk):
             mult *= 1.25
+        meta = load_memory_meta(symbol)
+        if is_episodic_chunk(chunk) and is_memory_expired(chunk.doc_id, meta):
+            return 0.0
+        mult *= memory_score_multiplier(chunk.doc_id, meta)
         return base * mult
 
     def search(

@@ -64,6 +64,8 @@ class RuntimeRunner:
             include_fundamental=flags.get("include_fundamental", True),
             include_sentiment=flags.get("include_sentiment", True),
             include_research_analyst=flags.get("include_research_analyst", True),
+            enable_reflection=flags.get("enable_reflection", False),
+            enable_dynamic_research=flags.get("enable_dynamic_research", False),
         )
 
         final = engine_result.raw

@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import time
 from collections.abc import Callable
 from typing import Any
 
 from ..runtime.tool_adapter import HarnessToolAdapter
-from ..runtime.trace import ToolCallRequest
 from .state import RESEARCH_TOOL_NAMES, RISK_TOOL_NAMES
 
 RecordFn = Callable[[str, dict[str, Any], dict[str, Any], float, str], None]
@@ -39,10 +37,15 @@ def execute_tool_step(
     *,
     on_invoke: RecordFn | None = None,
 ) -> tuple[dict[str, Any], bool, float, str | None]:
-    start = time.perf_counter()
-    response = adapter.invoke(ToolCallRequest(name=tool_name, arguments=arguments))
-    latency_ms = response.latency_ms or (time.perf_counter() - start) * 1000.0
+    from ..runtime.trace import ToolCallRequest
+
+    response = adapter.invoke_with_policy(ToolCallRequest(name=tool_name, arguments=arguments))
+    latency_ms = response.latency_ms
     data = response.data if isinstance(response.data, dict) else {"result": response.data}
+    if response.retry_count > 0:
+        data = {**data, "retry_count": response.retry_count}
+    if response.output_truncated:
+        data = {**data, "output_truncated": True}
     if on_invoke is not None:
         on_invoke(
             tool_name,
@@ -51,7 +54,7 @@ def execute_tool_step(
             latency_ms,
             "ok" if response.ok else "failed",
         )
-    return data, response.ok, latency_ms, response.error
+    return data, response.ok, latency_ms, response.error_code
 
 
 def merge_observation(state: dict[str, Any], observation: dict[str, Any]) -> None:

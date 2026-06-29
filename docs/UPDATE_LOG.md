@@ -5,6 +5,44 @@
 
 ---
 
+### 2026-06-29 — 评审反馈对齐：术语、评测语义、Agent eval 扩展
+
+**改了什么**
+- README / `ARCHITECTURE.md` / `EVAL.md`：「Agentic Workflow + 代码 Supervisor」替代过度「多智能体」表述；明确节点类型与 HITL 静态中断语义
+- `reliability_v1`：主指标改为故障恢复（非 Fake Model `pass^k`）；新增 `reli_untrusted_doc_ignored`
+- `graders.py`：`at_least_one_of_tools`、`forbidden_tools`
+- `regression_v1` 新增 `mem_current_evidence_over_prior`（15 条）
+
+**为什么改**
+- 评审反馈：概念表述须与代码一致；Fake Model 测 harness，Live 测 policy；确定性 pass^k 信息量低
+
+---
+
+### 2026-06-29 — 动态 Research 子图 + Memory 生命周期
+
+**改了什么**
+- `agents/subgraphs/`：Planner → Workers → Verifier → Replan → Synthesizer；`workflow_flags.enable_dynamic_research` 启用
+- `evidence/memory_lifecycle.py`：写入决策、冲突检测、episodic→semantic consolidation、检索降权
+- `regression_v1` 新增 `mem_lifecycle_consolidation`、`mem_skip_duplicate_write`、`research_dynamic_supply_chain`
+
+**为什么改**
+- 外层确定性工作流 + 内层动态研究；Memory 从无脑 append 升级为可决策、可合并、可降权
+
+---
+
+### 2026-06-29 — Context Engine + Retrieval/Reliability Eval
+
+**改了什么**
+- 新增 `context/`：`pack_workflow_context`、token 预算、来源配额、`context_manifest`；Research/Risk ReAct 改用打包上下文
+- 新增 `runtime/tool_policy.py`：超时重试、输出截断、评测用故障注入
+- 新增 `eval/retrieval_eval.py`、`eval/reliability.py` 与 `retrieval_v1` / `reliability_v1` evalset
+- CI 增加 `run_retrieval_eval.py`、`run_reliability_eval.py`
+
+**为什么改**
+- 面向 Agent 岗展示上下文工程、可测量 RAG 与可靠性（pass^k、故障注入）能力
+
+---
+
 ### 2026-06-29 — 移除遗留五层 Harness
 
 **改了什么**

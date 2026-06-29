@@ -265,6 +265,20 @@ class AgentEvalRunner:
                 merged["passed"] = len(merged["failures"]) == 0
                 merged["failure_tags"] = classify_failures(merged["failures"])
 
+        if not merged.get("passed"):
+            try:
+                from ..observability.trace_analysis import ingest_eval_failure
+
+                trace_steps = (merged.get("trace") or {}).get("steps") or []
+                merged["trace_insight"] = ingest_eval_failure(
+                    case_id=name,
+                    failures=list(merged.get("failures") or []),
+                    trace_steps=trace_steps,
+                    extra={"symbol": symbol, "source": "eval_runner"},
+                )
+            except Exception:
+                pass
+
         return merged
 
     def _run_hitl_case(self, case: dict[str, Any], *, use_fake: bool) -> dict[str, Any]:

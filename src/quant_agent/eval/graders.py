@@ -51,10 +51,54 @@ def evaluate_expectations(
         if tool not in tools_called:
             failures.append(f"expect: trace 未调用工具 '{tool}'")
 
+    at_least_one = expect.get("at_least_one_of_tools") or expect.get("at_least_one_of") or []
+    if at_least_one:
+        tools_called = {
+            s.get("tool_name")
+            for s in trace_steps
+            if isinstance(s, dict)
+        }
+        if not any(t in tools_called for t in at_least_one):
+            failures.append(
+                f"expect: trace 未调用任一工具 {at_least_one} (got {sorted(tools_called)})"
+            )
+
+    for tool in expect.get("forbidden_tools") or []:
+        tools_called = {
+            s.get("tool_name")
+            for s in trace_steps
+            if isinstance(s, dict) and s.get("tool_name")
+        }
+        if tool in tools_called:
+            failures.append(f"expect: trace 不应调用工具 '{tool}'")
+
     if expect.get("episodic_memory_nonempty"):
         episodic = final_state.get("episodic_memory") or []
         if not episodic:
             failures.append("expect: episodic_memory 为空")
+
+    if expect.get("semantic_memory_nonempty"):
+        semantic = final_state.get("semantic_memory") or []
+        if not semantic:
+            failures.append("expect: semantic_memory 为空")
+
+    min_findings = expect.get("research_findings_min")
+    if min_findings is not None:
+        findings = final_state.get("research_findings") or []
+        if len(findings) < int(min_findings):
+            failures.append(
+                f"expect: research_findings 数量 {len(findings)} < {min_findings}"
+            )
+
+    if expect.get("research_verification_passed") is True:
+        ver = final_state.get("research_verification") or {}
+        if not ver.get("passed"):
+            failures.append(f"expect: research_verification 未通过 ({ver.get('missing')})")
+
+    if expect.get("memory_skip_write") is True:
+        meta = final_state.get("memory_lifecycle") or {}
+        if meta.get("last_write_skipped") is not True:
+            failures.append("expect: 应跳过重复 memory 写入")
 
     expected_verdict = expect.get("risk_verdict")
     if expected_verdict is not None:

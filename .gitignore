@@ -48,6 +48,10 @@ reports/eval_regression_v1.json
 reports/eval_regression_v1.md
 reports/eval_capability_v1.json
 reports/eval_capability_v1.md
+reports/eval_retrieval_v1.json
+reports/eval_retrieval_v1.md
+reports/eval_reliability_v1.json
+reports/eval_reliability_v1.md
 reports/pilot_benchmark.json
 reports/pilot_benchmark.md
 src/reports/
@@ -134,3 +138,4 @@ docs/deployment/
 demo_output/
 reports/harness_report.json
 tests/_checkpoint_tmp/
+tests/_trace_tmp/

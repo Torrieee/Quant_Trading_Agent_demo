@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-面向 **Agent 开发 / 量化研究** 场景的多智能体投资分析 Demo：在经典量化回测能力之上，提供 **LangGraph 编排 + ReAct 工具循环 + RAG 证据层 + Agent 评测框架**。
+面向 **Agent 开发 / 量化研究** 场景的 **Agentic Workflow** Demo：在经典量化回测能力之上，提供 **LangGraph 固定拓扑编排 + 专用 Agent 节点（ReAct）+ RAG 证据层 + 分层 Agent 评测**。
 
 **产品入口**：`QuantEngine.analyze()` → `AgentCoordinator`（LangGraph）  
 **评测入口**：`scripts/run_eval.py`（离线回归 + 可选 Live 能力评测）
@@ -17,13 +17,16 @@
 
 | 模块 | 说明 |
 |------|------|
-| **多智能体工作流** | `analysis_panel → document_retrieval → research → [reflection] → risk → reporter` |
-| **ReAct 工具** | Research / Risk 通过 `react_loop` 调用策略推荐、证据检索、仓位计算等工具 |
+| **Agentic 工作流** | 固定拓扑 + 代码 Supervisor 路由：`analysis_panel → document_retrieval → research → [reflection] → risk → reporter` |
+| **节点类型** | 规则节点（`analysis_panel`）、检索节点（`document_retrieval`）、Agent 节点（Research/Risk 的 ReAct）、报告节点（`reporter`） |
+| **ReAct 工具** | Research / Risk 通过 `react_loop` 由模型决定工具调用与停止 |
 | **Evidence / RAG** | SEC/seed/profile + Hybrid 检索 + episodic/semantic memory + `document_signal` 决策修正 |
-| **HITL** | `gate.require_human_approval` 在 Risk 前 interrupt，`QuantEngine.resume()` 继续 |
+| **HITL** | Demo 用 `interrupt_before=["risk"]` + checkpoint；`QuantEngine.resume()` 继续（正式审批可升级为节点内 `interrupt()`） |
 | **可观测** | `trace_steps`、JSON trace 导出、可选 Langfuse |
 | **合规 / 模拟盘** | `audit_log`、`guardrails`、paper trading 工具 |
-| **Agent Eval** | `regression_v1`（假模型 CI）+ `capability_v1`（真 DeepSeek + LLM Judge） |
+| **Agent Eval** | 三层：`regression_v1` 锁 harness / `capability_v1` 测真实策略 / `reliability_v1` 测故障恢复 |
+| **Context Engine** | `context/` 模块：token 预算、去重、来源配额、`context_manifest` |
+| **Retrieval Eval** | `retrieval_v1`（Recall@K / MRR 消融，无 LLM） |
 | **经典量化** | `TradingAgent` 回测、参数优化 |
 
 ---
@@ -66,7 +69,9 @@ python -m pytest tests/ -v -m "not integration" --ignore=tests/test_runtime_inte
 python scripts/run_eval.py
 ```
 
-离线回归 **11/11** 应全部通过；报告输出至 `reports/eval_regression_v1.json`。
+离线回归 **15/15** 应全部通过；报告输出至 `reports/eval_regression_v1.json`。
+
+> **评测分层**：Fake Model 回归锁定 **harness / 编排 / 状态传递**；`capability_v1`（`--live`）才评估真实模型的 **工具选择与重规划**；`reliability_v1` 在 Fake Model 下测 **故障恢复**，不用 `pass^k` 冒充 Agent 策略稳定性。
 
 ### 2.3 多智能体在线分析（需 DeepSeek）
 
@@ -77,16 +82,25 @@ python examples_multi_agent.py
 
 `scripts/run_runtime_agent.py` 是内部 runtime case 联调入口，当前不作为快速开始推荐命令；日常在线分析请使用 `examples_multi_agent.py` 或直接调用 `QuantEngine`。
 
-### 2.4 Streamlit 可视化
+### 2.4 Streamlit 控制台（推荐）
 
 ```bash
 pip install -e ".[ui]"
 python scripts/run_dashboard.py
 ```
 
-- **Demo 模式**：本地 fixture + 模拟 LLM，无需 API Key  
+浏览器打开 `http://localhost:8501`，三页：
+
+| 页面 | 用途 |
+|------|------|
+| **分析工作台** | 跑全链路、动态 Research、HITL、Context 预算 |
+| **评测中心** | 一键跑 regression / retrieval / reliability |
+| **记忆与上下文** | 查看 memory_meta、semantic、检索结果 |
+
+详细测试步骤见 [docs/UI_GUIDE.md](docs/UI_GUIDE.md)。
+
+- **Demo 模式**：本地 fixture + 模拟 LLM，无需 API Key（默认）  
 - **在线模式**：配置 `DEEPSEEK_API_KEY` 后关闭 Demo 开关
-- 如果使用 `requirements.txt` 安装，Streamlit 已包含；如果使用 `pip install -e ".[dev]"`，运行看板前需额外安装 `".[ui]"`。
 
 ---
 
@@ -118,6 +132,8 @@ GitHub Actions 需在仓库 Secrets 配置 `DEEPSEEK_API_KEY` 后才会跑 Live 
 1. **`quality`**（每次 push/PR）  
    - `pytest -m "not integration"`  
    - `python scripts/run_eval.py`（`regression_v1`）  
+   - `python scripts/run_retrieval_eval.py`（`retrieval_v1`）  
+   - `python scripts/run_reliability_eval.py`（`reliability_v1`）  
    - 上传 `eval-regression-v1` artifact  
 
 2. **`eval-live`**（push、定时周一、workflow_dispatch；同仓库 PR 也会触发）  
@@ -132,8 +148,10 @@ GitHub Actions 需在仓库 Secrets 配置 `DEEPSEEK_API_KEY` 后才会跑 Live 
 Quant_Trading_Agent_demo/
 ├── .github/workflows/ci.yml
 ├── evalsets/
-│   ├── regression_v1.yaml      # 离线回归 11 条
+│   ├── regression_v1.yaml      # 离线回归 15 条
 │   ├── capability_v1.yaml      # Live 能力 6 条
+│   ├── retrieval_v1.yaml       # 检索 Recall@K / MRR 消融
+│   ├── reliability_v1.yaml     # pass^k + 工具故障注入
 │   └── manual/runtime_cases.yaml  # 手动 DeepSeek 联调
 ├── docs/
 │   ├── ARCHITECTURE.md
@@ -141,10 +159,11 @@ Quant_Trading_Agent_demo/
 │   └── UPDATE_LOG.md
 ├── src/quant_agent/
 │   ├── engine.py               # QuantEngine 产品入口
-│   ├── agents/                 # LangGraph 节点、ReAct、checkpoint
+│   ├── agents/                 # LangGraph 节点、subgraphs、ReAct
 │   ├── evidence/               # RAG、memory、document_signal
-│   ├── eval/                   # AgentEvalRunner、graders、judge
-│   ├── runtime/                # RuntimeRunner、trace、tool_adapter
+│   ├── eval/                   # AgentEvalRunner、graders、judge、retrieval/reliability
+│   ├── context/                # Context packer、token budget、manifest
+│   ├── runtime/                # RuntimeRunner、trace、tool_adapter、tool_policy
 │   ├── compliance/ execution/ observability/
 │   └── llm_agent.py            # TradingFunctionCaller 工具实现
 ├── tests/ fixtures/ scripts/
@@ -212,7 +231,8 @@ print(report["scorecard"]["summary"])
 | `EVIDENCE_FETCH_SEC` | SEC 披露拉取（默认 1；单测/CI eval 自动关） |
 | `EVIDENCE_SEARCH_MODE` | `tfidf` / `hybrid` / `embedding` |
 | `LANGGRAPH_CHECKPOINT` | `sqlite` / `memory` / `none` |
-| `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` | 可选 trace 上报；启用前需自行安装 `langfuse` |
+| `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` | 可选 trace 上报；需 `pip install langfuse` |
+| `AGENT_CONTEXT_BUDGET` | ReAct 上下文 token 预算（默认 8000） |
 
 ---
 
@@ -223,6 +243,10 @@ print(report["scorecard"]["summary"])
 | `python demo.py` | 经典规则 Agent 回测；需要可用行情数据源 |
 | `python scripts/run_agent.py --symbol AAPL` | 单策略 CLI 回测；需要可用行情数据源 |
 | `python scripts/tune_agent.py` | 网格搜索调参；需要可用行情数据源 |
+| `python scripts/run_eval.py` | Agent 离线/Live 回归评测 |
+| `python scripts/run_retrieval_eval.py` | 检索 Recall@K / MRR 消融 |
+| `python scripts/run_reliability_eval.py` | pass^k 稳定性 + 工具故障注入 |
+| `python scripts/run_runtime_agent.py` | 手动 DeepSeek 联调 |
 
 ---
 

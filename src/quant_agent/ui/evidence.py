@@ -10,6 +10,12 @@ from ..engine import EngineResult
 AGENT_LABELS = {
     "analysis_panel": "分析面板",
     "research": "量化研究",
+    "research_planner": "研究规划",
+    "research_evidence": "证据 Worker",
+    "research_market": "市场 Worker",
+    "research_strategy": "策略 Worker",
+    "research_verifier": "研究验证",
+    "research_synthesizer": "研究汇总",
     "risk": "风控",
     "reporter": "报告",
     "document_retrieval": "证据检索",
@@ -27,7 +33,12 @@ TOOL_LABELS = {
     "search_evidence": "披露证据检索",
     "evidence_index": "证据索引",
     "episodic_memory": "历次分析记忆",
-    "calculate_position_size": "仓位计算",
+    "research_planner": "研究规划",
+    "research_verifier": "研究验证",
+    "research_synthesizer": "研究汇总",
+    "plan_tasks": "任务规划",
+    "verify_findings": "产出验证",
+    "synthesize": "结果合并",
     "report": "分析报告",
 }
 

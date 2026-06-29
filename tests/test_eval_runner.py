@@ -26,6 +26,36 @@ from quant_agent.eval.benchmark import check_benchmark
 
 
 
+def test_graders_at_least_one_of_and_forbidden():
+    from quant_agent.eval.graders import evaluate_expectations
+
+    ok = evaluate_expectations(
+        {
+            "trace": {
+                "steps": [
+                    {"tool_name": "get_strategy_recommendation"},
+                    {"tool_name": "calculate_position_size"},
+                ]
+            },
+            "final_state": {},
+        },
+        {
+            "at_least_one_of_tools": ["search_evidence", "get_strategy_recommendation"],
+            "forbidden_tools": ["submit_paper_order"],
+        },
+    )
+    assert ok["passed"]
+
+    bad = evaluate_expectations(
+        {
+            "trace": {"steps": [{"tool_name": "submit_paper_order"}]},
+            "final_state": {},
+        },
+        {"forbidden_tools": ["submit_paper_order"]},
+    )
+    assert not bad["passed"]
+
+
 def test_load_regression_evalset():
 
     path = Path(__file__).resolve().parents[1] / "evalsets" / "regression_v1.yaml"

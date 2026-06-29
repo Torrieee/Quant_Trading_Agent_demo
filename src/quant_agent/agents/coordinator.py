@@ -31,6 +31,7 @@ def _checkpoint_safe(node_fn):
 
 
 def _interrupt_nodes(gate: dict[str, Any] | None) -> list[str]:
+    """Demo HITL：静态 interrupt_before；生产可改为 approval 节点内 interrupt()。"""
     gate = gate or {}
     if gate.get("require_human_approval"):
         return ["risk"]
@@ -92,7 +93,7 @@ def build_coordinator_graph(
 
 
 class AgentCoordinator:
-    """多智能体工作流协调器。"""
+    """Agentic 工作流协调器（LangGraph 固定拓扑 + 代码 Supervisor）。"""
 
     def __init__(
         self,
