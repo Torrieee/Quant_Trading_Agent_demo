@@ -1,5 +1,5 @@
 """
-Quant Trading Agent Demo
+Quant Research Agent Demo
 
 这个脚本展示了量化交易 Agent 的核心功能：
 1. 使用 TradingAgent 类运行完整的交易流程
@@ -200,7 +200,7 @@ def demo_compare_strategies():
 def main():
     """运行所有 demo"""
     print("\n" + "=" * 60)
-    print("Quant Trading Agent - Demo")
+    print("Quant Research Agent - Demo")
     print("=" * 60)
     print("\n本 demo 将展示以下功能：")
     print("1. 单策略回测")
@@ -237,5 +237,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 

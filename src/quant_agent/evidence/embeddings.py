@@ -54,7 +54,7 @@ class SentenceTransformerBackend:
             from sentence_transformers import SentenceTransformer
         except ImportError as exc:
             raise ImportError(
-                "sentence-transformers 未安装。请执行: pip install 'quant-agent[embedding]'"
+                "sentence-transformers 未安装。请执行: pip install 'quant-research-agent[embedding]'"
             ) from exc
         self._model = SentenceTransformer(model_name)
 

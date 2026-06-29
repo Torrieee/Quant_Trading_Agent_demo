@@ -1,4 +1,4 @@
-"""Quant Trading Agent — Streamlit 多页面控制台."""
+"""Quant Research Agent — Streamlit 多页面控制台."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from quant_agent.ui.dashboard import (  # noqa: E402
 )
 
 st.set_page_config(
-    page_title="Quant Agent 控制台",
+    page_title="Quant Research Agent 控制台",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",

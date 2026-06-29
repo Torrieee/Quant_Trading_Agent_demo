@@ -1,7 +1,7 @@
 [project]
-name = "quant-agent"
+name = "quant-research-agent"
 version = "0.1.0"
-description = "A simple quant trading agent with data, strategy, and backtesting modules."
+description = "An agentic quant research demo with LangGraph workflows, RAG evidence, evaluation, and classic backtesting modules."
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.26.0",

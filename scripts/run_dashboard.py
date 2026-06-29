@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Launch the Quant Agent Streamlit dashboard."""
+"""Launch the Quant Research Agent Streamlit dashboard."""
 
 from __future__ import annotations
 

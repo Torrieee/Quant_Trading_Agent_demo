@@ -7,7 +7,7 @@ import typer
 from quant_agent.agent import run_agent
 from quant_agent.config import AgentConfig, BacktestConfig, DataConfig, StrategyConfig
 
-app = typer.Typer(help="Quant Trading Agent CLI")
+app = typer.Typer(help="Quant Research Agent classic backtest CLI")
 
 
 @app.command()
@@ -55,6 +55,5 @@ def run(
 
 if __name__ == "__main__":
     app()
-
 
 

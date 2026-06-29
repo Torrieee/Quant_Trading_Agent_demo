@@ -1,6 +1,6 @@
 # 项目更新记录
 
-本文档记录 **Quant Trading Agent Demo** 的主要演进：每次改了什么、为什么改、以及当时的技术选型理由。  
+本文档记录 **Quant Research Agent Demo** 的主要演进：每次改了什么、为什么改、以及当时的技术选型理由。  
 后续每次有意义的功能/架构变更，请在本文件 **顶部** 追加一条（最新在前）。
 
 ---
@@ -135,7 +135,7 @@
 **怎么做 / 选型**
 - **Hybrid** = α×稠密向量 + (1−α)×TF-IDF，再乘 recency / episodic boost；**不是** TF-IDF 与 episodic 的混合
 - 默认 embedding 用 sklearn `HashingVectorizer`：零下载、离线、与现有 `scikit-learn` 依赖一致
-- 更强语义可选 `pip install "quant-agent[embedding]"` + `EVIDENCE_EMBEDDING_BACKEND=sentence_transformers`
+- 更强语义可选 `pip install "quant-research-agent[embedding]"` + `EVIDENCE_EMBEDDING_BACKEND=sentence_transformers`
 - Checkpoint 默认 **SQLite** 落盘 `data_cache/checkpoints/langgraph.db`；测试用 `memory`
 - 未选 Postgres checkpoint：demo 规模 SQLite 足够；未选 Chroma：避免引入独立向量库运维
 

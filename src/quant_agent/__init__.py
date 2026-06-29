@@ -1,4 +1,4 @@
-"""Quant Trading Agent package."""
+"""Quant Research Agent package."""
 
 from .agent import AgentRunResult, TradingAgent, run_agent
 from .config import AgentConfig, BacktestConfig, DataConfig, StrategyConfig

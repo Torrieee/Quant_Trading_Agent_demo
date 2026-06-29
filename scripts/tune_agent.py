@@ -5,7 +5,7 @@ import typer
 from quant_agent.config import AgentConfig, BacktestConfig, DataConfig
 from quant_agent.optimizer import grid_search_on_strategy
 
-app = typer.Typer(help="Quant Trading Agent Auto-tuning CLI")
+app = typer.Typer(help="Quant Research Agent auto-tuning CLI")
 
 
 @app.command()
@@ -64,5 +64,4 @@ def grid_search(
 
 if __name__ == "__main__":
     app()
-
 

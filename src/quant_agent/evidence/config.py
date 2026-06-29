@@ -18,7 +18,7 @@ def sec_user_agent() -> str:
     """SEC 要求请求带可识别 User-Agent（含联系邮箱）。"""
     return os.environ.get(
         "EVIDENCE_SEC_USER_AGENT",
-        "QuantAgentDemo/1.0 (research@example.com)",
+        "QuantResearchAgentDemo/1.0 (research@example.com)",
     ).strip()
 
 
