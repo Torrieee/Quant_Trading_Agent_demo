@@ -20,10 +20,8 @@ pytestmark = pytest.mark.integration
 
 CASES_PATH = (
     Path(__file__).resolve().parents[1]
-    / "src"
-    / "quant_agent"
-    / "harness"
-    / "cases"
+    / "evalsets"
+    / "manual"
     / "runtime_cases.yaml"
 )
 

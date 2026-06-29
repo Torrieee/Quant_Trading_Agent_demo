@@ -39,9 +39,6 @@ jobs:
             reports/eval_regression_v1.json
             reports/eval_regression_v1.md
 
-      - name: Run quality harness gate
-        run: python scripts/run_harness.py --gate --report reports/harness_report.json
-
   eval-live:
     runs-on: ubuntu-latest
     # push/PR/定时/手动 均可触发；无 API Key 时跳过（不失败）

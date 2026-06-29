@@ -27,7 +27,7 @@ def main() -> None:
         "--cases",
         type=Path,
         default=None,
-        help="YAML file of runtime cases (e.g. harness/cases/runtime_cases.yaml)",
+        help="YAML file of runtime cases (e.g. evalsets/manual/runtime_cases.yaml)",
     )
     parser.add_argument(
         "--case-name",

@@ -5,6 +5,19 @@
 
 ---
 
+### 2026-06-29 — 移除遗留五层 Harness
+
+**改了什么**
+- 删除 `harness/` 五层编排（orchestrator / planner / executor / pilot 等）及 `run_harness.py`、`run_pilot_benchmark.py`
+- 将 `tool_adapter`、`trace`、`trace_store` 迁至 `runtime/`；`evidence_coverage`、`efficiency`、`llm_judge` 迁至 `eval/`
+- CI 仅保留 `pytest` + `run_eval.py`；手动联调用例移至 `evalsets/manual/runtime_cases.yaml`
+- 删除重复子目录 `QuantTradingAgent/`（与仓库根目录重复）
+
+**为什么改**
+- 产品评测统一为 QuantEngine E2E；五层工具链 Harness 与主链路口径重复
+
+---
+
 ### 2026-06-29 — Agent 评测框架 + CI 接入
 
 **改了什么**
@@ -140,7 +153,7 @@
 
 **怎么做 / 选型**
 - 在线拉取 + 本地 `data_cache/sec/` 缓存；失败回退 seed
-- 未做 AkShare/A 股：项目范围先做 US/SEC
+- 未做 AkShare/A 股：用户约束先做 US/SEC
 
 ---
 

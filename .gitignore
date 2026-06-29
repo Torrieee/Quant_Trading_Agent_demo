@@ -48,8 +48,6 @@ reports/eval_regression_v1.json
 reports/eval_regression_v1.md
 reports/eval_capability_v1.json
 reports/eval_capability_v1.md
-reports/harness_report.json
-reports/harness_debug.json
 reports/pilot_benchmark.json
 reports/pilot_benchmark.md
 src/reports/
@@ -104,11 +102,7 @@ models/
 *.bak
 *.swp
 
-# Resume and deployment related files (not core code)
-docs/resume/
-README_RESUME.md
-resume_demo.py
-INTERVIEW_PREPARATION.md
+# Deployment helper files (not core code)
 部署到GitHub_总结.md
 GITHUB_DEPLOYMENT_GUIDE_CN.md
 GITHUB_DEPLOYMENT.md
@@ -136,5 +130,7 @@ docs/deployment/
 !README.md
 !docs/**
 !evalsets/README.md
-!src/quant_agent/harness/cases/README.md
 
+demo_output/
+reports/harness_report.json
+tests/_checkpoint_tmp/

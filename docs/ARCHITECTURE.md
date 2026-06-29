@@ -30,14 +30,7 @@ analysis_panel  document_retrieval  research  risk → reporter
 | 入口 | `TradingAgent.run()` | `QuantEngine.analyze()` |
 | LLM | 可选 Function Calling | Research / Risk / Reporter 默认 DeepSeek |
 
-**两套评测，勿混淆：**
-
-| | `quant_agent/eval/` | `quant_agent/harness/` |
-|---|---------------------|------------------------|
-| 测谁 | `QuantEngine` 全链路 | 工具契约、pilot、旧 orchestrator |
-| CI | `run_eval.py` regression | `run_harness.py --gate` |
-
----
+**评测入口**：`scripts/run_eval.py`（离线回归 + 可选 Live 能力评测）。
 
 ## 2. LangGraph 工作流
 
@@ -75,7 +68,7 @@ analysis_panel  document_retrieval  research  risk → reporter
 
 ## 4. 工具层
 
-`llm_agent.TradingFunctionCaller` 注册 OpenAI 风格 function schema，经 `HarnessToolAdapter` 供 ReAct 循环调用。
+`llm_agent.TradingFunctionCaller` 注册 OpenAI 风格 function schema，经 `runtime/tool_adapter.HarnessToolAdapter` 供 ReAct 循环调用。
 
 主要工具：
 
@@ -108,8 +101,7 @@ src/quant_agent/
 │   └── model_router.py    # 按角色选 DeepSeek 模型
 ├── evidence/              # RAG + memory
 ├── eval/                  # Agent 评测
-├── runtime/runner.py      # YAML case 执行器
-├── harness/               # 遗留质量 Harness
+├── runtime/               # RuntimeRunner、trace、tool_adapter
 ├── execution/             # 模拟盘
 ├── compliance/
 └── ui/                    # Streamlit

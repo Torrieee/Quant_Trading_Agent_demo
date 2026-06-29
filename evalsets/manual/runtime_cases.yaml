@@ -1,10 +1,8 @@
-# Runtime integration cases — require DEEPSEEK_API_KEY; not run in default CI gate.
-# 产品 E2E 评测请用: python scripts/run_eval.py [--live]
-# 本文件用于手动 DeepSeek 联调: python scripts/run_runtime_agent.py --cases src/quant_agent/harness/cases/runtime_cases.yaml
+# Live integration cases — require DEEPSEEK_API_KEY; not run in default CI gate.
+# Run: python scripts/run_runtime_agent.py --cases evalsets/manual/runtime_cases.yaml
 
 - name: runtime_supervisor_chain
   type: runtime
-  harness: false
   task: >
     For a ranging market, recommend a suitable strategy. Do not size the position yourself;
     Research only — Risk will handle sizing later.
@@ -26,7 +24,6 @@
 
 - name: runtime_ranging_research_task
   type: runtime
-  harness: false
   task: Analyze market state for AAPL and recommend a strategy for the current regime.
   gate:
     max_steps: 15
@@ -35,7 +32,6 @@
 
 - name: runtime_volatility_workflow
   type: runtime
-  harness: false
   task: >
     Recommend a strategy for low volatility conditions, then ensure position is sized
     with an appropriate risk method.

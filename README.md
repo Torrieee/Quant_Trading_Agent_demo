@@ -1,14 +1,13 @@
-# QuantTradingAgent
+# Quant Trading Agent
 
-[![CI](https://github.com/Torrieee/QuantTradingAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/Torrieee/QuantTradingAgent/actions/workflows/ci.yml)
+[![CI](https://github.com/Torrieee/Quant_Trading_Agent_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/Torrieee/Quant_Trading_Agent_demo/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-面向 **量化研究与多智能体系统** 场景的投资分析 Demo：在经典量化回测能力之上，提供 **LangGraph 编排 + ReAct 工具循环 + RAG 证据层 + Agent 评测框架**。
+面向 **Agent 开发 / 量化研究** 场景的多智能体投资分析 Demo：在经典量化回测能力之上，提供 **LangGraph 编排 + ReAct 工具循环 + RAG 证据层 + Agent 评测框架**。
 
 **产品入口**：`QuantEngine.analyze()` → `AgentCoordinator`（LangGraph）  
-**评测入口**：`scripts/run_eval.py`（离线回归 + 可选 Live 能力评测）  
-**质量 Harness**（遗留编排评估）：`scripts/run_harness.py`（与产品主链路并行保留）
+**评测入口**：`scripts/run_eval.py`（离线回归 + 可选 Live 能力评测）
 
 > 详细架构见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)；评测说明见 [`docs/EVAL.md`](docs/EVAL.md)；变更记录见 [`docs/UPDATE_LOG.md`](docs/UPDATE_LOG.md)。
 
@@ -34,8 +33,8 @@
 ### 2.1 克隆与安装
 
 ```bash
-git clone https://github.com/Torrieee/QuantTradingAgent.git
-cd QuantTradingAgent
+git clone https://github.com/Torrieee/Quant_Trading_Agent_demo.git
+cd Quant_Trading_Agent_demo
 ```
 
 **Windows（推荐）**
@@ -118,7 +117,6 @@ GitHub Actions 需在仓库 Secrets 配置 `DEEPSEEK_API_KEY` 后才会跑 Live 
 1. **`quality`**（每次 push/PR）  
    - `pytest -m "not integration"`  
    - `python scripts/run_eval.py`（`regression_v1`）  
-   - `python scripts/run_harness.py --gate`  
    - 上传 `eval-regression-v1` artifact  
 
 2. **`eval-live`**（push、定时周一、workflow_dispatch；同仓库 PR 也会触发）  
@@ -134,7 +132,8 @@ Quant_Trading_Agent_demo/
 ├── .github/workflows/ci.yml
 ├── evalsets/
 │   ├── regression_v1.yaml      # 离线回归 11 条
-│   └── capability_v1.yaml      # Live 能力 6 条
+│   ├── capability_v1.yaml      # Live 能力 6 条
+│   └── manual/runtime_cases.yaml  # 手动 DeepSeek 联调
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── EVAL.md
@@ -144,12 +143,11 @@ Quant_Trading_Agent_demo/
 │   ├── agents/                 # LangGraph 节点、ReAct、checkpoint
 │   ├── evidence/               # RAG、memory、document_signal
 │   ├── eval/                   # AgentEvalRunner、graders、judge
-│   ├── runtime/runner.py       # YAML case → QuantEngine
-│   ├── harness/                # 遗留质量 Harness（pilot/orchestrator）
+│   ├── runtime/                # RuntimeRunner、trace、tool_adapter
 │   ├── compliance/ execution/ observability/
 │   └── llm_agent.py            # TradingFunctionCaller 工具实现
 ├── tests/ fixtures/ scripts/
-├── reports/                    # eval / harness 报告（本地生成）
+├── reports/                    # eval 报告（本地生成）
 ├── demo.py                     # 经典 TradingAgent 回测 demo
 ├── examples_multi_agent.py     # QuantEngine 在线示例
 └── pyproject.toml
@@ -217,28 +215,22 @@ print(report["scorecard"]["summary"])
 | 命令 | 说明 |
 |------|------|
 | `python demo.py` | 经典规则 Agent 回测 |
-| `python scripts/run_harness.py --gate` | Harness 质量门禁 |
-| `python scripts/run_pilot_benchmark.py` | 4 条 pilot 离线 benchmark |
 | `python scripts/run_agent.py --symbol AAPL` | 单策略 CLI 回测 |
 | `python scripts/tune_agent.py` | 网格搜索调参 |
+| `python scripts/run_runtime_agent.py` | 手动 DeepSeek 联调 |
 
 ---
 
-## 9. Agent Harness（遗留评估层）
-
-原 **Phase 2 Harness**（Planner→Executor 编排、pilot 4 条、tool schema 契约）仍保留，用于工具链与 pilot 场景的质量门禁，**与 QuantEngine 主产品链路分离**。
-
-- 产品 E2E 评测请用 **`scripts/run_eval.py`**  
-- Harness 侧重 **tool_compliance / process_quality / pilot_tasks**
-
----
-
-## 10. 技术栈
+## 9. 技术栈
 
 Python 3.11+ · pandas · numpy · LangGraph · LangChain-OpenAI（DeepSeek 兼容）· OpenBB / yfinance · scikit-learn · pydantic · pytest · Streamlit（可选 UI）
 
 ---
 
-## 11. 贡献与许可
+## 10. 贡献与许可
 
 欢迎 Issue / PR。MIT License，详见 `LICENSE`。
+
+**作者**：Torrie Li · [GitHub](https://github.com/Torrieee)
+
+如果这个项目对你有帮助，请给个 Star。

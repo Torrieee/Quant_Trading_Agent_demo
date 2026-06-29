@@ -8,7 +8,7 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from ..agents.llm import require_deepseek_chat_model
-from ..harness.evaluators.llm_judge import LLMJudge
+from .llm_judge import LLMJudge
 
 
 def run_live_judge(

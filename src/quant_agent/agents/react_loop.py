@@ -7,7 +7,7 @@ from typing import Any
 
 from langchain_core.messages import BaseMessage, ToolMessage
 
-from ..harness.tool_adapter import HarnessToolAdapter
+from ..runtime.tool_adapter import HarnessToolAdapter
 from .tools import RecordFn, enrich_tool_arguments, execute_tool_step, merge_observation
 
 

@@ -6,8 +6,8 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from ..harness.tool_adapter import HarnessToolAdapter
-from ..harness.trace import ToolCallRequest
+from ..runtime.tool_adapter import HarnessToolAdapter
+from ..runtime.trace import ToolCallRequest
 from .state import RESEARCH_TOOL_NAMES, RISK_TOOL_NAMES
 
 RecordFn = Callable[[str, dict[str, Any], dict[str, Any], float, str], None]

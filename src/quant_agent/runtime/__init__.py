@@ -1,8 +1,14 @@
-"""Harness 兼容的运行时执行器（内部使用 QuantEngine）。"""
+"""运行时工具：trace、tool_adapter（runner 请从 runtime.runner 直接导入，避免与 engine 循环依赖）。"""
 
-from .runner import RuntimeRunner, run_runtime_task
+from .tool_adapter import HarnessToolAdapter
+from .trace import AgentTrace, AgentTraceRecord, ToolCallRequest, new_trace_id
+from .trace_store import TraceStore
 
 __all__ = [
-    "RuntimeRunner",
-    "run_runtime_task",
+    "HarnessToolAdapter",
+    "AgentTrace",
+    "AgentTraceRecord",
+    "ToolCallRequest",
+    "new_trace_id",
+    "TraceStore",
 ]

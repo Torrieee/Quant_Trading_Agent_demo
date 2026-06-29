@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..trace import AgentTraceRecord
+from ..runtime.trace import AgentTraceRecord
 
 
 def _step_latency(step: AgentTraceRecord | dict[str, Any]) -> float:

@@ -9,11 +9,11 @@ import pandas as pd
 
 from ..engine import QuantEngine
 from ..features import add_daily_returns
-from ..harness.evaluators.efficiency import evaluate_efficiency
-from ..harness.evaluators.evidence_coverage import evaluate_evidence_coverage
-from ..harness.tool_adapter import HarnessToolAdapter
-from ..harness.trace import AgentTrace, AgentTraceRecord, new_trace_id
-from ..harness.trace_store import TraceStore
+from ..eval.efficiency import evaluate_efficiency
+from ..eval.evidence_coverage import evaluate_evidence_coverage
+from .tool_adapter import HarnessToolAdapter
+from .trace import AgentTrace, AgentTraceRecord, new_trace_id
+from .trace_store import TraceStore
 from ..agents.llm import DeepSeekConfigError, require_deepseek_chat_model
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]

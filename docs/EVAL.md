@@ -91,7 +91,7 @@ print(report["judge_summary"])  # Live Judge 汇总
 | 类型 | 模块 | 说明 |
 |------|------|------|
 | Runtime gate | `runtime/runner.py` | 节点、report、position_size、风控 |
-| Evidence coverage | `harness/evaluators/evidence_coverage.py` | `required_evidence_keys` |
+| Evidence coverage | `eval/evidence_coverage.py` | `required_evidence_keys` |
 | Expect | `eval/graders.py` | risk_flags、document_signal、required_tools 等 |
 | LLM Judge | `eval/judge.py` | tool_selection、evidence_sufficiency、efficiency、answer_grounding（1–5） |
 | Benchmark | `eval/benchmark.py` | evalset 级 `min_pass_rate` |
@@ -125,12 +125,10 @@ Artifacts：`eval-regression-v1`、`eval-capability-v1`（JSON + Markdown）。
 
 ---
 
-## 7. 与 Harness 的关系
+## 7. 手动联调
 
-| | Agent Eval (`eval/`) | Harness (`harness/`) |
-|---|----------------------|----------------------|
-| SUT | QuantEngine | 工具 schema、pilot orchestrator |
-| CI | `run_eval.py` | `run_harness.py --gate` |
-| 目的 | 多智能体 E2E 回归 | 工具契约 / pilot 场景 |
+DeepSeek 在线联调用例见 `evalsets/manual/runtime_cases.yaml`，执行：
 
-两者在 CI 中**并行**执行，互补而非替代。
+```bash
+python scripts/run_runtime_agent.py --cases evalsets/manual/runtime_cases.yaml
+```

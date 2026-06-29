@@ -6,7 +6,7 @@ from typing import Any, Iterator
 
 from langgraph.graph import END, START, StateGraph
 
-from ..harness.tool_adapter import HarnessToolAdapter
+from ..runtime.tool_adapter import HarnessToolAdapter
 from ..observability.tracer import export_trace, stream_events_from_graph
 from .checkpoint import get_checkpointer, is_checkpoint_enabled, workflow_invoke_config
 from .nodes.analysis_panel import analysis_panel_node
