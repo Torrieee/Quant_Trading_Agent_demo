@@ -42,10 +42,17 @@ data_cache/
 # Harness runtime outputs (keep reports/examples/ for repo samples)
 reports/traces/
 reports/test_traces/
+reports/_debug_ev/
+reports/eval_runs/
+reports/eval_regression_v1.json
+reports/eval_regression_v1.md
+reports/eval_capability_v1.json
+reports/eval_capability_v1.md
 reports/harness_report.json
 reports/harness_debug.json
 reports/pilot_benchmark.json
 reports/pilot_benchmark.md
+src/reports/
 
 # Generated outputs (optional - you can keep demo_output/ for showcase)
 # demo_output/
@@ -124,7 +131,10 @@ README_DEMO_RUN.md
 README_LLM_DEMO.md
 docs/deployment/
 
-# Exclude all .md files except the main README.md
+# Exclude all .md files except project documentation
 *.md
 !README.md
+!docs/**
+!evalsets/README.md
+!src/quant_agent/harness/cases/README.md
 

@@ -52,6 +52,22 @@ class HarnessRunner:
             adapter=HarnessToolAdapter(self.caller),
             live=live,
         )
+        self._runtime_runner = None
+        self._live = live
+
+    def _get_runtime_runner(self):
+        if self._runtime_runner is None:
+            from ..runtime.runner import RuntimeRunner
+
+            self._runtime_runner = RuntimeRunner(
+                adapter=HarnessToolAdapter(self.caller),
+            )
+        return self._runtime_runner
+
+    def run_runtime_case(
+        self, case: dict[str, Any], *, write_trace: bool = True
+    ) -> dict[str, Any]:
+        return self._get_runtime_runner().run_case(case, write_trace=write_trace)
 
     def run_agent_task_case(
         self, case: dict[str, Any], *, write_trace: bool = True
@@ -137,7 +153,7 @@ class HarnessRunner:
             "tool_case": case_result,
         }
 
-    def run_all(self) -> dict[str, Any]:
+    def run_all(self, *, include_runtime: bool = False) -> dict[str, Any]:
         results: list[dict[str, Any]] = []
 
         for case in _load_yaml_cases("backtest_cases.yaml"):
@@ -149,6 +165,11 @@ class HarnessRunner:
         for case in _load_yaml_cases("tool_chain_cases.yaml"):
             if case.get("harness", True):
                 results.append(self.run_agent_task_case(case))
+
+        if include_runtime:
+            for case in _load_yaml_cases("runtime_cases.yaml"):
+                if case.get("harness", True):
+                    results.append(self.run_runtime_case(case))
 
         passed = sum(1 for r in results if r["passed"])
         failed = len(results) - passed
@@ -171,8 +192,9 @@ def run_harness(
     report_path: Path | None = None,
     gate: bool = False,
     live: bool = False,
+    include_runtime: bool = False,
 ) -> dict[str, Any]:
-    report = HarnessRunner(live=live).run_all()
+    report = HarnessRunner(live=live).run_all(include_runtime=include_runtime)
     if report_path:
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(

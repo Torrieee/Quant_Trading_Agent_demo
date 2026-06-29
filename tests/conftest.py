@@ -59,6 +59,43 @@ def agent_config() -> AgentConfig:
     )
 
 
+@pytest.fixture(autouse=True)
+def isolated_evidence_store(monkeypatch):
+    """单元测试使用独立 evidence 目录，避免本地 data_cache 污染断言。"""
+    import shutil
+    import uuid
+    from pathlib import Path
+
+    from quant_agent.agents.checkpoint import reset_checkpointer
+    from quant_agent.agents.nodes import document_retrieval as dr_mod
+    from quant_agent.evidence import retriever as retriever_mod
+    from quant_agent.evidence.embeddings import reset_embedding_backend
+
+    retriever_mod._default_retriever = None
+    dr_mod._retriever = None
+    reset_embedding_backend()
+    reset_checkpointer()
+
+    path = Path(__file__).parent / "_evidence_tmp" / uuid.uuid4().hex
+    path.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("EVIDENCE_STORE_DIR", str(path))
+    monkeypatch.setenv("EVIDENCE_SEARCH_MODE", "hybrid")
+    monkeypatch.setenv("EVIDENCE_FETCH_NEWS", "0")
+    monkeypatch.setenv("LANGGRAPH_CHECKPOINT", "memory")
+    yield
+    retriever_mod._default_retriever = None
+    dr_mod._retriever = None
+    reset_embedding_backend()
+    reset_checkpointer()
+    shutil.rmtree(path, ignore_errors=True)
+
+
+@pytest.fixture(autouse=True)
+def disable_sec_fetch_in_unit_tests(monkeypatch):
+    """单元测试默认关闭 SEC 网络请求，避免 CI 慢/不稳定。"""
+    monkeypatch.setenv("EVIDENCE_FETCH_SEC", "0")
+
+
 @pytest.fixture
 def mock_download_ohlcv(sample_ohlcv, monkeypatch):
     def _mock(_cfg: DataConfig) -> pd.DataFrame:

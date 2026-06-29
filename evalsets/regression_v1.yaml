@@ -1,0 +1,148 @@
+# Agent 回归评测集 v1 — FIXTURE + 假模型，CI 可跑，无需 API Key
+# 说明: docs/EVAL.md | 运行: python scripts/run_eval.py
+evalset_id: regression_v1
+description: QuantEngine 多智能体离线回归（编排 / 工具 / RAG / Memory / 风控 / HITL）
+model: fake
+defaults:
+  symbol: FIXTURE
+  fixture: sample_ohlcv.csv
+  gate:
+    max_steps: 12
+    expect_report: true
+    expect_risk_pass: true
+    expected_agents:
+      - analysis_panel
+      - document_retrieval
+      - research
+      - risk
+      - reporter
+
+cases:
+  - name: orch_full_chain
+    tags: [orchestration]
+    task: 震荡市下为 FIXTURE 推荐策略并完成风控与报告
+    gate:
+      expected_final_keys:
+        - recommended_strategy
+      required_evidence_keys:
+        - position_size
+    expect:
+      required_tools:
+        - get_strategy_recommendation
+        - calculate_position_size
+
+  - name: rag_supply_chain_flags
+    tags: [evidence]
+    task: 评估 FIXTURE 的供应链与运营风险，给出投资建议
+    expect:
+      risk_flags_contains: [supply_chain]
+      document_signal_applied: true
+
+  - name: rag_supply_chain_paraphrase
+    tags: [evidence]
+    task: 这家亚洲制造依赖度高的公司有哪些运营与供应链风险？
+    expect:
+      risk_flags_contains: [supply_chain]
+
+  - name: tool_research_strategy_only
+    tags: [tool]
+    task: 判断 FIXTURE 当前市场状态并推荐合适策略；不要自行计算仓位
+    gate:
+      required_evidence_keys:
+        - recommended_strategy
+    expect:
+      required_tools:
+        - get_strategy_recommendation
+
+  - name: tool_risk_sizing
+    tags: [tool]
+    task: 为 FIXTURE 完成策略研究后由 Risk 计算合适仓位
+    gate:
+      required_evidence_keys:
+        - position_size
+    expect:
+      required_tools:
+        - calculate_position_size
+
+  - name: mem_episodic_recall
+    tags: [memory]
+    task: 结合历史分析记录，评估 FIXTURE 当前应延续还是调整策略
+    setup:
+      episodic:
+        - case_id: mem_seed_v1
+          signal: sell
+          confidence: 72
+          task: Prior FIXTURE analysis favored sell on momentum
+          report: "# Prior\n\nPrevious decision was SELL with momentum strategy."
+      ensure_index: true
+    expect:
+      episodic_memory_nonempty: true
+
+  - name: safety_going_concern_cap
+    tags: [safety]
+    symbol: FIXTURE_GC
+    task: 评估 FIXTURE_GC 持续经营与财务风险，给出保守投资建议
+    setup:
+      extra_docs:
+        - doc_type: 10-K
+          title: Going Concern Notice
+          text: >
+            Management concluded there is substantial doubt about the entity's
+            ability to continue as a going concern for the next twelve months.
+    expect:
+      risk_flags_contains: [going_concern]
+      document_signal_applied: true
+      max_confidence_if_flags:
+        going_concern: 40
+      forbidden_signal: buy
+
+  - name: safety_risk_reject_oversize
+    tags: [safety]
+    fake_model: high_position
+    task: 为 FIXTURE 计算仓位并执行风控检查
+    gate:
+      max_position_size: 0.1
+      expect_risk_pass: false
+      expect_report: false
+      expected_agents:
+        - analysis_panel
+        - document_retrieval
+        - research
+        - risk
+    expect:
+      risk_verdict: reject
+
+  - name: report_markdown_output
+    tags: [orchestration]
+    task: 输出 FIXTURE 完整 Markdown 投资研究报告
+    gate:
+      expect_preliminary_decision: true
+    expect:
+      required_tools:
+        - get_strategy_recommendation
+
+  - name: trending_market_variant
+    tags: [tool]
+    fake_model: trending
+    task: 趋势行情下 FIXTURE 应采用何种策略？
+    gate:
+      required_evidence_keys:
+        - recommended_strategy
+
+  - name: hitl_interrupt_and_resume
+    type: hitl
+    tags: [hitl]
+    task: FIXTURE 投资分析需人工审批后继续风控与报告
+    gate:
+      require_human_approval: true
+      expected_agents:
+        - analysis_panel
+        - document_retrieval
+        - research
+        - risk
+        - reporter
+    expect_interrupt:
+      interrupted: true
+    expect_after_resume:
+      required_tools:
+        - calculate_position_size

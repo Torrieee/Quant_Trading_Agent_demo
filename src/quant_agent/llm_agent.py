@@ -1,43 +1,24 @@
 """
-大模型Agent集成模块
-
-实现LLM集成、Function Calling和RAG功能
+交易工具 Function Calling 模块（供 Harness 与 QuantEngine Research/Risk 使用）。
 """
 
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
-
-try:
-    from openai import OpenAI
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    logger.warning("OpenAI not installed. LLM features will not work.")
-
-try:
-    try:
-        from langchain_community.embeddings import OpenAIEmbeddings
-        from langchain_community.vectorstores import FAISS
-        from langchain.text_splitter import RecursiveCharacterTextSplitter
-        LANGCHAIN_AVAILABLE = True
-    except ImportError:
-        from langchain.embeddings import OpenAIEmbeddings
-        from langchain.vectorstores import FAISS
-        from langchain.text_splitter import RecursiveCharacterTextSplitter
-        LANGCHAIN_AVAILABLE = True
-except ImportError:
-    LANGCHAIN_AVAILABLE = False
-    logger.warning("LangChain not installed. RAG features will not work.")
-
-
 class TradingFunctionCaller:
     """交易相关的Function Calling工具"""
     
-    def __init__(self, data_source=None, strategy_executor=None, llm_strategy_generator=None):
+    def __init__(
+        self,
+        data_source=None,
+        strategy_executor=None,
+        llm_strategy_generator=None,
+        evidence_retriever=None,
+    ):
         self.data_source = data_source
         self.strategy_executor = strategy_executor
         self.llm_strategy_generator = llm_strategy_generator  # 新增：LLM策略生成器
+        self.evidence_retriever = evidence_retriever
     
     def get_available_functions(self) -> List[Dict[str, Any]]:
         """返回可用的Function Calling工具列表"""
@@ -85,17 +66,64 @@ class TradingFunctionCaller:
             },
             {
                 "name": "get_strategy_recommendation",
-                "description": "根据市场状态获取策略推荐",
+                "description": "根据市场状态与指标对 momentum/mean_reversion 打分并推荐策略",
                 "parameters": {
                     "type": "object",
                     "properties": {
+                        "symbol": {
+                            "type": "string",
+                            "description": "股票代码，例如 AAPL"
+                        },
                         "market_state": {
                             "type": "string",
                             "description": "市场状态：trending_up, trending_down, ranging, high_volatility, low_volatility",
                             "enum": ["trending_up", "trending_down", "ranging", "high_volatility", "low_volatility"]
+                        },
+                        "volatility": {
+                            "type": "number",
+                            "description": "年化波动率（可选，来自 analyze_market_state）"
+                        },
+                        "trend_strength": {
+                            "type": "number",
+                            "description": "趋势强度 0-1（可选）"
+                        },
+                        "is_bullish": {"type": "boolean"},
+                        "is_bearish": {"type": "boolean"},
+                        "risk_flags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "披露风险标记，如 supply_chain、going_concern"
                         }
                     },
                     "required": ["market_state"]
+                }
+            },
+            {
+                "name": "search_evidence",
+                "description": "在已索引的公司披露、基本面文档与历次分析记忆（episodic_memory）中检索",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "symbol": {
+                            "type": "string",
+                            "description": "股票代码"
+                        },
+                        "query": {
+                            "type": "string",
+                            "description": "检索问题或关键词"
+                        },
+                        "top_k": {
+                            "type": "integer",
+                            "description": "返回条数，默认 5",
+                            "default": 5
+                        },
+                        "doc_types": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "可选文档类型过滤，如 10-K、8-K、profile"
+                        }
+                    },
+                    "required": ["symbol", "query"]
                 }
             },
             {
@@ -155,7 +183,26 @@ class TradingFunctionCaller:
                     },
                     "required": ["symbol", "strategy", "start_date"]
                 }
-            }
+            },
+            {
+                "name": "submit_paper_order",
+                "description": "模拟盘下单（buy/sell）",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "symbol": {"type": "string"},
+                        "side": {"type": "string", "enum": ["buy", "sell"]},
+                        "quantity": {"type": "number"},
+                        "price": {"type": "number"},
+                    },
+                    "required": ["symbol", "side", "quantity", "price"],
+                },
+            },
+            {
+                "name": "get_paper_portfolio",
+                "description": "查询模拟盘持仓与现金",
+                "parameters": {"type": "object", "properties": {}, "required": []},
+            },
         ]
         
         # 添加LLM原创功能（如果可用）
@@ -235,7 +282,9 @@ class TradingFunctionCaller:
                     arguments.get("lookback_days", 60)
                 )
             elif function_name == "get_strategy_recommendation":
-                return self._get_strategy_recommendation(arguments["market_state"])
+                return self._get_strategy_recommendation(arguments)
+            elif function_name == "search_evidence":
+                return self._search_evidence(arguments)
             elif function_name == "calculate_position_size":
                 return self._calculate_position_size(arguments)
             elif function_name == "run_backtest":
@@ -245,6 +294,10 @@ class TradingFunctionCaller:
                     arguments["start_date"],
                     arguments.get("end_date")
                 )
+            elif function_name == "submit_paper_order":
+                return self._submit_paper_order(arguments)
+            elif function_name == "get_paper_portfolio":
+                return self._get_paper_portfolio()
             elif function_name == "generate_strategy_from_description":
                 return self._generate_strategy_from_description(
                     arguments["description"],
@@ -314,38 +367,49 @@ class TradingFunctionCaller:
             "adx": market_state.adx
         }
     
-    def _get_strategy_recommendation(self, market_state: str):
-        """获取策略推荐"""
-        from .market_state import MarketRegime, get_optimal_strategy_for_regime
-        
-        regime_map = {
-            "trending_up": MarketRegime.TRENDING_UP,
-            "trending_down": MarketRegime.TRENDING_DOWN,
-            "ranging": MarketRegime.RANGING,
-            "high_volatility": MarketRegime.HIGH_VOLATILITY,
-            "low_volatility": MarketRegime.LOW_VOLATILITY
+    def _get_strategy_recommendation(self, arguments: Dict[str, Any]):
+        """获取策略推荐（打分 + 备选策略）。"""
+        from .strategy_recommendation import recommend_strategy
+
+        market_state = arguments.get("market_state")
+        if not market_state:
+            return {"error": "market_state is required"}
+
+        symbol = arguments.get("symbol") or "UNKNOWN"
+        result = recommend_strategy(
+            symbol=symbol,
+            market_state=market_state,
+            volatility=arguments.get("volatility"),
+            trend_strength=arguments.get("trend_strength"),
+            is_bullish=arguments.get("is_bullish"),
+            is_bearish=arguments.get("is_bearish"),
+            risk_flags=arguments.get("risk_flags"),
+        )
+        if "error" in result:
+            return result
+        # 兼容 merge_observation / harness expected keys
+        result["recommended_strategy"] = result.get("recommended_strategy")
+        return result
+
+    def _search_evidence(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """检索证据库。"""
+        from .evidence import EvidenceRetriever
+
+        symbol = arguments.get("symbol")
+        query = arguments.get("query")
+        if not symbol or not query:
+            return {"error": "symbol and query are required"}
+
+        retriever = self.evidence_retriever or EvidenceRetriever.get_default()
+        top_k = int(arguments.get("top_k") or 5)
+        doc_types = arguments.get("doc_types")
+        chunks = retriever.search(symbol, query, top_k=top_k, doc_types=doc_types)
+        return {
+            "symbol": symbol.upper(),
+            "query": query,
+            "count": len(chunks),
+            "retrieved_documents": [c.to_dict() for c in chunks],
         }
-        
-        regime = regime_map.get(market_state)
-        if regime:
-            from .market_state import MarketState
-            mock_state = MarketState(
-                regime=regime,
-                volatility=0.2,
-                trend_strength=0.5,
-                adx=20.0,
-                atr=2.0,
-                bollinger_width=0.1,
-                is_bullish=True,
-                is_bearish=False
-            )
-            recommended = get_optimal_strategy_for_regime(mock_state)
-            return {
-                "market_state": market_state,
-                "recommended_strategy": recommended,
-                "reason": f"市场状态为{market_state}，适合使用{recommended}策略"
-            }
-        return {"error": f"Unknown market state: {market_state}"}
     
     def _calculate_position_size(self, arguments: Dict[str, Any]):
         """计算仓位大小"""
@@ -476,275 +540,23 @@ class TradingFunctionCaller:
             logger.error(f"Error recommending portfolio: {e}")
             return {"error": str(e)}
 
+    def _submit_paper_order(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        from .execution.paper_trading import submit_paper_order
 
-class RAGSystem:
-    """RAG（检索增强生成）系统"""
-    
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key
-        self.vector_store = None
-        self.embeddings = None
-        self._initialize_embeddings()
-    
-    def _initialize_embeddings(self):
-        """初始化嵌入模型"""
-        if not LANGCHAIN_AVAILABLE:
-            logger.warning("LangChain not available, RAG features disabled")
-            return
-        
-        try:
-            if self.api_key:
-                self.embeddings = OpenAIEmbeddings(openai_api_key=self.api_key)
-            else:
-                # 使用本地嵌入模型（如果有）
-                logger.warning("No API key provided, using mock embeddings")
-                self.embeddings = None
-        except Exception as e:
-            logger.error(f"Failed to initialize embeddings: {e}")
-            self.embeddings = None
-    
-    def build_knowledge_base(self, trading_records: List[Dict[str, Any]]):
-        """构建知识库"""
-        if not LANGCHAIN_AVAILABLE or not self.embeddings:
-            logger.warning("RAG not available, skipping knowledge base building")
-            return
-        
-        try:
-            # 将交易记录转换为文本
-            texts = []
-            for record in trading_records:
-                text = f"""
-交易记录：
-股票代码: {record.get('symbol', 'N/A')}
-策略: {record.get('strategy', 'N/A')}
-日期: {record.get('date', 'N/A')}
-收益率: {record.get('return', 0):.2%}
-市场状态: {record.get('market_state', 'N/A')}
-仓位: {record.get('position', 0):.2%}
-结果: {record.get('result', 'N/A')}
-                """.strip()
-                texts.append(text)
-            
-            # 分割文本
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=500,
-                chunk_overlap=50
-            )
-            documents = text_splitter.create_documents(texts)
-            
-            # 创建向量存储
-            self.vector_store = FAISS.from_documents(documents, self.embeddings)
-            logger.info(f"Built knowledge base with {len(documents)} documents")
-        except Exception as e:
-            logger.error(f"Failed to build knowledge base: {e}")
-    
-    def retrieve_relevant_experience(self, query: str, k: int = 3) -> List[str]:
-        """检索相关历史经验"""
-        if not self.vector_store:
-            return []
-        
-        try:
-            docs = self.vector_store.similarity_search(query, k=k)
-            return [doc.page_content for doc in docs]
-        except Exception as e:
-            logger.error(f"Failed to retrieve: {e}")
-            return []
+        return submit_paper_order(
+            arguments["symbol"],
+            arguments["side"],
+            float(arguments["quantity"]),
+            float(arguments["price"]),
+        )
 
+    def _get_paper_portfolio(self) -> Dict[str, Any]:
+        from .execution.paper_trading import load_portfolio
 
-class LLMTradingAgent:
-    """集成大模型的交易Agent"""
-    
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        model: str = "gpt-3.5-turbo",
-        enable_function_calling: bool = True,
-        enable_rag: bool = True
-    ):
-        if not OPENAI_AVAILABLE:
-            raise ImportError("OpenAI package required. Install with: pip install openai")
-        
-        self.client = OpenAI(api_key=api_key) if api_key else None
-        self.model = model
-        
-        # 初始化LLM策略生成器（用于原创功能）
-        try:
-            from .llm_strategy import LLMStrategyGenerator
-            self.llm_strategy_generator = LLMStrategyGenerator(api_key=api_key, model=model)
-        except Exception as e:
-            logger.warning(f"Failed to initialize LLM strategy generator: {e}")
-            self.llm_strategy_generator = None
-        
-        self.function_caller = TradingFunctionCaller(llm_strategy_generator=self.llm_strategy_generator)
-        self.rag_system = RAGSystem(api_key=api_key) if enable_rag else None
-        self.enable_function_calling = enable_function_calling
-        self.conversation_history = []
-    
-    def chat(self, user_message: str, use_functions: bool = True, use_rag: bool = True) -> str:
-        """与LLM对话，支持Function Calling和RAG"""
-        if not self.client:
-            return "Error: OpenAI client not initialized. Please provide API key."
-        
-        # 构建消息
-        messages = self.conversation_history + [{"role": "user", "content": user_message}]
-        
-        # 如果启用RAG，检索相关经验
-        if use_rag and self.rag_system:
-            relevant_experience = self.rag_system.retrieve_relevant_experience(user_message)
-            if relevant_experience:
-                rag_context = "\n\n相关历史经验：\n" + "\n".join(relevant_experience)
-                messages[-1]["content"] = user_message + rag_context
-        
-        # 准备Function Calling
-        functions = None
-        if use_functions and self.enable_function_calling:
-            functions = self.function_caller.get_available_functions()
-        
-        try:
-            # 调用LLM
-            if functions:
-                # OpenAI新的API使用tools参数
-                try:
-                    # 尝试使用新API（tools）
-                    tools = [{"type": "function", "function": f} for f in functions]
-                    response = self.client.chat.completions.create(
-                        model=self.model,
-                        messages=messages,
-                        tools=tools,
-                        tool_choice="auto"
-                    )
-                except Exception:
-                    # 回退到旧API（functions）
-                    response = self.client.chat.completions.create(
-                        model=self.model,
-                        messages=messages,
-                        functions=functions,
-                        function_call="auto"
-                    )
-            else:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages
-                )
-            
-            message = response.choices[0].message
-            
-            # 处理Function Calling（兼容新旧API）
-            function_call = None
-            if hasattr(message, 'tool_calls') and message.tool_calls:
-                # 新API格式
-                function_call = message.tool_calls[0].function
-            elif hasattr(message, 'function_call') and message.function_call:
-                # 旧API格式
-                function_call = message.function_call
-            
-            if function_call:
-                function_name = function_call.name if hasattr(function_call, 'name') else function_call.get('name')
-                import json
-                if hasattr(function_call, 'arguments'):
-                    arguments = json.loads(function_call.arguments)
-                else:
-                    arguments = json.loads(function_call.get('arguments', '{}'))
-                
-                # 执行函数
-                function_result = self.function_caller.call_function(function_name, arguments)
-                
-                # 将结果返回给LLM（兼容新旧API）
-                if hasattr(message, 'tool_calls') and message.tool_calls:
-                    # 新API格式
-                    messages.append({
-                        "role": "assistant",
-                        "content": message.content,
-                        "tool_calls": message.tool_calls
-                    })
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": message.tool_calls[0].id,
-                        "name": function_name,
-                        "content": json.dumps(function_result)
-                    })
-                else:
-                    # 旧API格式
-                    messages.append({
-                        "role": "assistant",
-                        "content": None,
-                        "function_call": {
-                            "name": function_name,
-                            "arguments": json.dumps(arguments)
-                        }
-                    })
-                    messages.append({
-                        "role": "function",
-                        "name": function_name,
-                        "content": json.dumps(function_result)
-                    })
-                
-                # 再次调用LLM生成最终回复
-                final_response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages
-                )
-                result = final_response.choices[0].message.content
-            else:
-                result = message.content
-            
-            # 保存对话历史
-            self.conversation_history.append({"role": "user", "content": user_message})
-            self.conversation_history.append({"role": "assistant", "content": result})
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"Error in LLM chat: {e}")
-            return f"Error: {str(e)}"
-    
-    def analyze_market_with_llm(self, symbol: str, query: Optional[str] = None) -> str:
-        """使用LLM分析市场"""
-        if not query:
-            query = f"请分析{symbol}的市场情况，并给出交易建议"
-        
-        prompt = f"""
-作为量化交易专家，请分析以下股票：
-股票代码: {symbol}
-
-请提供：
-1. 市场趋势分析
-2. 适合的交易策略建议
-3. 风险提示
-
-如果需要获取实际数据，可以使用可用的工具函数。
-        """
-        
-        return self.chat(prompt, use_functions=True, use_rag=True)
-    
-    def generate_strategy_explanation(self, strategy_name: str, results: Dict[str, Any]) -> str:
-        """使用LLM生成策略解释"""
-        prompt = f"""
-请解释以下交易策略的回测结果：
-
-策略名称: {strategy_name}
-总收益率: {results.get('total_return', 0):.2%}
-年化收益率: {results.get('annual_return', 0):.2%}
-夏普比率: {results.get('sharpe', 0):.4f}
-最大回撤: {results.get('max_drawdown', 0):.2%}
-
-请提供：
-1. 策略表现评价
-2. 风险分析
-3. 改进建议
-        """
-        
-        return self.chat(prompt, use_functions=False, use_rag=True)
-    
-    def build_knowledge_base_from_results(self, results: List[Dict[str, Any]]):
-        """从回测结果构建知识库"""
-        if self.rag_system:
-            self.rag_system.build_knowledge_base(results)
+        return load_portfolio()
 
 
 __all__ = [
     "TradingFunctionCaller",
-    "RAGSystem",
-    "LLMTradingAgent",
 ]
 

@@ -1,0 +1,81 @@
+# Live 能力评测 v1 — 真 DeepSeek，FIXTURE/AAPL + fixture，CI 需 DEEPSEEK_API_KEY
+# 说明: docs/EVAL.md | 运行: python scripts/run_eval.py --live --judge
+evalset_id: capability_v1
+description: QuantEngine 在线能力评测（编排 / 证据 / 策略 / 风控 / 报告）
+model: live
+benchmark:
+  min_pass_rate: 0.67
+  judge: true
+  judge_min_score: 3
+  require_judge: false
+defaults:
+  symbol: FIXTURE
+  fixture: sample_ohlcv.csv
+  gate:
+    max_steps: 18
+    max_research_steps: 10
+    expect_report: true
+    expect_risk_pass: true
+    expect_preliminary_decision: true
+    expected_agents:
+      - analysis_panel
+      - document_retrieval
+      - research
+      - risk
+      - reporter
+
+cases:
+  - name: live_fixture_full_workflow
+    tags: [orchestration]
+    judge: true
+    task: >
+      为 FIXTURE 完成完整投资分析：评估市场状态、推荐策略、计算仓位并输出 Markdown 报告。
+    gate:
+      required_evidence_keys:
+        - position_size
+      expected_final_keys:
+        - recommended_strategy
+
+  - name: live_fixture_supply_risk
+    tags: [evidence]
+    judge: true
+    task: 评估 FIXTURE 供应链与运营风险，并在报告中说明证据来源
+    expect:
+      risk_flags_contains: [supply_chain]
+
+  - name: live_aapl_workflow
+    tags: [orchestration]
+    symbol: AAPL
+    fixture: sample_ohlcv.csv
+    judge: true
+    task: Analyze AAPL for current regime, recommend a strategy, size the position, and write a report.
+    gate:
+      required_evidence_keys:
+        - position_size
+
+  - name: live_aapl_seed_evidence
+    tags: [evidence]
+    symbol: AAPL
+    fixture: sample_ohlcv.csv
+    task: What supply chain and regulatory risks does Apple face? Summarize in the investment report.
+    expect:
+      risk_flags_contains: [supply_chain]
+
+  - name: live_en_ranging_strategy
+    tags: [tool]
+    judge: true
+    task: >
+      For a ranging market on FIXTURE, recommend a suitable strategy.
+      Risk agent should handle position sizing; produce a final report.
+    gate:
+      required_evidence_keys:
+        - recommended_strategy
+
+  - name: live_report_and_decision
+    tags: [orchestration]
+    judge: true
+    task: 分析 FIXTURE 并给出明确 buy/hold/sell 建议及置信度，附风控结论
+    gate:
+      expect_preliminary_decision: true
+      required_evidence_keys:
+        - position_size
