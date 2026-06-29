@@ -29,7 +29,7 @@ analysis_panel  document_retrieval  research  risk → reporter
 | `supervisor` | 代码路由 | 否 — `_choose_next()` 纯规则 |
 | `analysis_panel` | 规则信号聚合 | 否 |
 | `document_retrieval` | RAG 预检索 | 否 |
-| `research` | ReAct 或动态子图 | 是（ReAct 路径） |
+| `research` | ReAct 或动态子图 | ReAct 路径是；动态子图当前为规则 Planner/Verifier + 工具 Worker |
 | `reflection` | 规则检查 | 否 |
 | `risk` | ReAct + 硬否决 | 是（ReAct 路径） |
 | `reporter` | 报告生成 | 通常一次 LLM 调用 |
@@ -137,7 +137,7 @@ Planner → Workers → Verifier → [Replan bump → Planner] → Synthesizer
 
 **检索模式**（`EVIDENCE_SEARCH_MODE`）：`tfidf` / `hybrid` / `embedding`。
 
-**Episodic Memory**：每次成功 `analyze` 后写入 `data_cache/evidence/{SYMBOL}.json`，下次分析可被检索引用。当前披露证据优先于陈旧 episodic 结论，由 `document_signal` 与 regression case `mem_current_evidence_over_prior` 覆盖。
+**Episodic Memory**：`analyze` 成功且生成报告后写入 `data_cache/evidence/{SYMBOL}.json`，下次分析可被检索引用。当前披露证据优先于陈旧 episodic 结论，由 `document_signal` 与 regression case `mem_current_evidence_over_prior` 覆盖。
 
 ---
 

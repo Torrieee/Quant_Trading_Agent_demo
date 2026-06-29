@@ -12,7 +12,7 @@
 
 > **Fake Model 回归用于锁定 Agent harness 和工作流行为；真实模型 eval 才评估 Agent 的决策策略与工具使用能力。**
 
-`14/14` 或 `15/15` 本身信息量有限；更有说服力的是：case 覆盖 orchestration / tool / evidence / memory / safety / hitl，且评测曾驱动过 retry policy、memory lifecycle、HITL resume 等修复（见 `docs/UPDATE_LOG.md`）。
+`15/15` 本身信息量有限；更有说服力的是：case 覆盖 orchestration / tool / evidence / memory / safety / hitl / dynamic research，且评测曾驱动过 retry policy、memory lifecycle、HITL resume 等修复（见 `docs/UPDATE_LOG.md`）。
 
 ---
 
@@ -127,10 +127,10 @@ print(report["judge_summary"])  # Live Judge 汇总
 
 | Job | 命令 | 条件 |
 |-----|------|------|
-| `quality` | `python scripts/run_eval.py` | 每次 PR/push，**必须全绿** |
+| `quality` | `pytest` + `run_eval.py` + `run_retrieval_eval.py` + `run_reliability_eval.py` | 每次 PR/push，**必须全绿** |
 | `eval-live` | `python scripts/run_eval.py --live --judge` | 需 `DEEPSEEK_API_KEY` secret；无则 skip |
 
-Artifacts：`eval-regression-v1`、`eval-capability-v1`（JSON + Markdown）。
+Artifacts：当前 workflow 上传 `eval-regression-v1` 与 `eval-capability-v1`（JSON + Markdown）；`retrieval_v1` / `reliability_v1` 在 job 内生成 JSON 报告并参与阻断。
 
 **配置 Secret：** GitHub → Settings → Secrets → Actions → `DEEPSEEK_API_KEY`
 

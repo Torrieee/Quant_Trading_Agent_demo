@@ -26,7 +26,7 @@ python scripts/run_dashboard.py
 
 1. 勾选 **动态 Research 子图**（或选预设「供应链风险」）  
 2. 标的 `FIXTURE`，开始分析  
-3. **Trace** 中应出现 `research_planner`、`research_evidence`、`research_verifier`  
+3. **Trace** 中应出现 `research_planner`、`research_evidence`、`research_verifier`；若并行阶段需要补市场状态，也会出现 `research_market`  
 4. **Research / Context** 页签查看 `research_findings`
 
 ### Context Engineering
@@ -61,7 +61,7 @@ python scripts/run_dashboard.py
 |------|----------|----------|
 | E2E 回归 | `python scripts/run_eval.py` | 15 条全链路 case |
 | 检索评测 | `python scripts/run_retrieval_eval.py` | RAG Recall@5 / MRR |
-| 可靠性评测 | `python scripts/run_reliability_eval.py` | pass^3 + 工具 timeout |
+| 可靠性评测 | `python scripts/run_reliability_eval.py` | 工具 timeout retry + 不可信文档注入 |
 | 运行全部 | CI `quality` job 三项 | 一键回归 |
 
 失败时展开页面错误信息，或查看 `reports/` 下 JSON。
@@ -78,6 +78,14 @@ python scripts/run_dashboard.py
 
 ---
 
+## 页面四：Trace 洞察
+
+1. 点击 **扫描 trace 目录** → 读取 `data_cache/traces/` 并生成失败 tag 聚类  
+2. 点击 **生成 Showcase trace** → 跑 `timeout → retry → replan → HITL → resume` 演示链路  
+3. 查看 `reports/trace_insights.json` / `reports/trace_insights.md`
+
+---
+
 ## 功能对照表
 
 | 项目能力 | 在控制台怎么测 |
@@ -91,3 +99,4 @@ python scripts/run_dashboard.py
 | Agent Eval | 评测中心 |
 | Reliability | 评测中心「可靠性评测」 |
 | HITL | 分析工作台 HITL 开关 |
+| Trace 分析 | Trace 洞察页 |

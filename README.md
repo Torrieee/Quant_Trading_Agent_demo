@@ -1,7 +1,7 @@
 # Quant Trading Agent
 
 [![CI](https://github.com/Torrieee/Quant_Trading_Agent_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/Torrieee/Quant_Trading_Agent_demo/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 面向 **Agent 开发 / 量化研究** 场景的 **Agentic Workflow** Demo：在经典量化回测能力之上，提供 **LangGraph 固定拓扑编排 + 专用 Agent 节点（ReAct）+ RAG 证据层 + 分层 Agent 评测**。
@@ -25,7 +25,7 @@
 | **HITL** | Demo 用 `interrupt_before=["risk"]` + checkpoint；`QuantEngine.resume()` 继续（正式审批可升级为节点内 `interrupt()`） |
 | **可观测** | `trace_steps`、JSON trace 导出、可选 Langfuse |
 | **合规 / 模拟盘** | `audit_log`、`guardrails`、paper trading 工具 |
-| **Agent Eval** | 三层：`regression_v1` 锁 harness / `capability_v1` 测真实策略 / `reliability_v1` 测故障恢复 |
+| **Agent Eval** | 四类：`regression_v1` 锁编排与状态传递 / `capability_v1` 测真实模型策略 / `retrieval_v1` 测 RAG 召回 / `reliability_v1` 测故障恢复 |
 | **Context Engine** | `context/` 模块：token 预算、去重、来源配额、`context_manifest` |
 | **Retrieval Eval** | `retrieval_v1`（Recall@K / MRR 消融，无 LLM） |
 | **经典量化** | `TradingAgent` 回测、参数优化 |
@@ -92,13 +92,14 @@ pip install -e ".[ui]"
 python scripts/run_dashboard.py
 ```
 
-浏览器打开 `http://localhost:8501`，三页：
+浏览器打开 `http://localhost:8501`，四页：
 
 | 页面 | 用途 |
 |------|------|
 | **分析工作台** | 跑全链路、动态 Research（Market/Evidence 并行 + Strategy 顺序）、HITL、Context 预算 |
 | **评测中心** | 一键跑 regression / retrieval / reliability |
 | **记忆与上下文** | 查看 memory_meta、semantic、检索结果 |
+| **Trace 洞察** | 扫描 `data_cache/traces/`，生成失败聚类、事件统计与 showcase trace |
 
 详细测试步骤见 [docs/UI_GUIDE.md](docs/UI_GUIDE.md)。
 
@@ -113,6 +114,8 @@ python scripts/run_dashboard.py
 |---------|------|------|-----|
 | `evalsets/regression_v1.yaml` | offline（`RoleAwareFakeModel`） | 确定性回归，测编排/工具/RAG/记忆/风控/HITL | **每次 PR**（`quality` job） |
 | `evalsets/capability_v1.yaml` | live（DeepSeek） | 真实推理能力 + 可选 LLM Judge | **定时/手动**（`eval-live` job，需 secret） |
+| `evalsets/retrieval_v1.yaml` | offline | 检索 Recall@K / MRR 消融 | **每次 PR**（`quality` job） |
+| `evalsets/reliability_v1.yaml` | offline（`RoleAwareFakeModel`） | 工具 timeout retry + 不可信文档防护 | **每次 PR**（`quality` job） |
 
 ```bash
 # 离线回归（默认）
@@ -154,7 +157,7 @@ Quant_Trading_Agent_demo/
 │   ├── regression_v1.yaml      # 离线回归 15 条
 │   ├── capability_v1.yaml      # Live 能力 6 条
 │   ├── retrieval_v1.yaml       # 检索 Recall@K / MRR 消融
-│   ├── reliability_v1.yaml     # pass^k + 工具故障注入
+│   ├── reliability_v1.yaml     # 故障恢复 + 不可信文档注入
 │   └── manual/runtime_cases.yaml  # 手动 DeepSeek 联调
 ├── docs/
 │   ├── ARCHITECTURE.md
@@ -248,14 +251,14 @@ print(report["scorecard"]["summary"])
 | `python scripts/tune_agent.py` | 网格搜索调参；需要可用行情数据源 |
 | `python scripts/run_eval.py` | Agent 离线/Live 回归评测 |
 | `python scripts/run_retrieval_eval.py` | 检索 Recall@K / MRR 消融 |
-| `python scripts/run_reliability_eval.py` | pass^k 稳定性 + 工具故障注入 |
+| `python scripts/run_reliability_eval.py` | 故障恢复 + 不可信文档注入（输出 pass^k 作为辅助指标） |
 | `python scripts/run_runtime_agent.py` | 内部 runtime case 联调（需 `DEEPSEEK_API_KEY`） |
 
 ---
 
 ## 9. 技术栈
 
-Python 3.11+ · pandas · numpy · LangGraph · LangChain-OpenAI（DeepSeek 兼容）· OpenBB / yfinance · scikit-learn · pydantic · pytest · Streamlit（UI，可通过 `.[ui]` 安装）
+Python 3.10+（CI 使用 3.11）· pandas · numpy · LangGraph · LangChain-OpenAI（DeepSeek 兼容）· OpenBB / yfinance · scikit-learn · pydantic · pytest · Streamlit（UI，可通过 `.[ui]` 安装）
 
 可选能力：
 

@@ -77,6 +77,25 @@ def _search_env(
             os.environ[key] = val
 
 
+@contextmanager
+def _offline_ingest_env() -> Iterator[None]:
+    """Retrieval eval 使用内置 seed 文档，关闭外部 SEC/news fetch。"""
+    prev = {
+        "EVIDENCE_FETCH_SEC": os.environ.get("EVIDENCE_FETCH_SEC"),
+        "EVIDENCE_FETCH_NEWS": os.environ.get("EVIDENCE_FETCH_NEWS"),
+    }
+    os.environ["EVIDENCE_FETCH_SEC"] = "0"
+    os.environ["EVIDENCE_FETCH_NEWS"] = "0"
+    try:
+        yield
+    finally:
+        for key, val in prev.items():
+            if val is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = val
+
+
 def _search_variant(
     index: HybridEvidenceIndex,
     symbol: str,
@@ -111,7 +130,8 @@ def run_retrieval_eval(
     symbol = (spec.get("symbol") or "FIXTURE").upper()
     cases = spec.get("cases") or []
 
-    chunks = build_symbol_chunks(symbol, stock_info={"symbol": symbol, "sector": "Tech"})
+    with _offline_ingest_env():
+        chunks = build_symbol_chunks(symbol, stock_info={"symbol": symbol, "sector": "Tech"})
     for doc in spec.get("extra_docs") or []:
         text = doc.get("text", "")
         if not text:

@@ -39,7 +39,7 @@
 - CI 增加 `run_retrieval_eval.py`、`run_reliability_eval.py`
 
 **为什么改**
-- 面向 Agent 岗展示上下文工程、可测量 RAG 与可靠性（pass^k、故障注入）能力
+- 面向 Agent 能力展示上下文工程、可测量 RAG 与可靠性（故障恢复、故障注入）能力
 
 ---
 
@@ -48,7 +48,7 @@
 **改了什么**
 - 删除 `harness/` 五层编排（orchestrator / planner / executor / pilot 等）及 `run_harness.py`、`run_pilot_benchmark.py`
 - 将 `tool_adapter`、`trace`、`trace_store` 迁至 `runtime/`；`evidence_coverage`、`efficiency`、`llm_judge` 迁至 `eval/`
-- CI 仅保留 `pytest` + `run_eval.py`；手动联调用例移至 `evalsets/manual/runtime_cases.yaml`
+- 当时 CI 仅保留 `pytest` + `run_eval.py`；手动联调用例移至 `evalsets/manual/runtime_cases.yaml`
 - 删除重复子目录 `QuantTradingAgent/`（与仓库根目录重复）
 
 **为什么改**

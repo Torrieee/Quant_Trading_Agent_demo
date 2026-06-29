@@ -15,6 +15,9 @@
 |------|------|
 | `reports/eval_regression_v1.json` | 离线回归 scorecard |
 | `reports/eval_capability_v1.json` | Live 能力评测 scorecard |
-| `reports/traces/` | 运行时 trace（可选 `--trace`） |
+| `reports/eval_retrieval_v1.json` | 检索 Recall@K / MRR 消融 |
+| `reports/eval_reliability_v1.json` | 可靠性评测（故障恢复 + 不可信文档注入） |
+| `reports/traces/` | eval 运行时 trace（`scripts/run_eval.py --trace`） |
+| `data_cache/traces/` | 产品 trace 与 showcase trace（可由 `AGENT_TRACE_DIR` 覆盖） |
 | `data_cache/evidence/` | Episodic / 索引持久化 |
 | `data_cache/audit/decisions.jsonl` | 合规审计日志 |
