@@ -25,7 +25,7 @@
 | **可观测** | `trace_steps`、JSON trace 导出、可选 Langfuse |
 | **合规 / 模拟盘** | `audit_log`、`guardrails`、paper trading 工具 |
 | **Agent Eval** | `regression_v1`（假模型 CI）+ `capability_v1`（真 DeepSeek + LLM Judge） |
-| **经典量化** | `TradingAgent` 回测、参数优化、RL 训练（保留） |
+| **经典量化** | `TradingAgent` 回测、参数优化 |
 
 ---
 
@@ -217,7 +217,6 @@ print(report["scorecard"]["summary"])
 | 命令 | 说明 |
 |------|------|
 | `python demo.py` | 经典规则 Agent 回测 |
-| `python examples_rl_training.py` | RL 训练示例 |
 | `python scripts/run_harness.py --gate` | Harness 质量门禁 |
 | `python scripts/run_pilot_benchmark.py` | 4 条 pilot 离线 benchmark |
 | `python scripts/run_agent.py --symbol AAPL` | 单策略 CLI 回测 |
@@ -236,7 +235,7 @@ print(report["scorecard"]["summary"])
 
 ## 10. 技术栈
 
-Python 3.11+ · pandas · numpy · LangGraph · LangChain-OpenAI（DeepSeek 兼容）· OpenBB / yfinance · scikit-learn · pydantic · pytest · Streamlit（可选 UI）· stable-baselines3（RL）
+Python 3.11+ · pandas · numpy · LangGraph · LangChain-OpenAI（DeepSeek 兼容）· OpenBB / yfinance · scikit-learn · pydantic · pytest · Streamlit（可选 UI）
 
 ---
 
