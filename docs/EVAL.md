@@ -2,7 +2,7 @@
 
 评测对象：**`QuantEngine.analyze()` 全链路**。
 
-## 0. 三层评测对象（评审口径）
+## 0. 评测分层（评审口径）
 
 | 测试层 | 载体 | 评测对象 |
 |--------|------|----------|
@@ -10,7 +10,7 @@
 | Fake Model graph test | `regression_v1` / `reliability_v1` | orchestration、runtime、control plane、故障恢复 |
 | Live Model eval | `capability_v1` (`--live`) | agent policy、工具选择、重规划、停止行为 |
 
-> **Fake Model 回归用于锁定 Agent harness 和工作流行为；真实模型 eval 才评估 Agent 的决策策略与工具使用能力。**
+> **Fake Model 回归用于锁定工作流编排、控制面与状态传递；真实模型 eval 才评估 Agent 的决策策略与工具使用能力。**
 
 `15/15` 本身信息量有限；更有说服力的是：case 覆盖 orchestration / tool / evidence / memory / safety / hitl / dynamic research，且评测曾驱动过 retry policy、memory lifecycle、HITL resume 等修复（见 `docs/UPDATE_LOG.md`）。
 
@@ -20,7 +20,7 @@
 
 | 文件 | `model` | 条数 | 用途 |
 |------|---------|------|------|
-| `evalsets/regression_v1.yaml` | `fake` | 15 | CI 阻断：确定性 harness，无 API 费用 |
+| `evalsets/regression_v1.yaml` | `fake` | 15 | CI 阻断：确定性工作流回归，无 API 费用 |
 | `evalsets/capability_v1.yaml` | `live` | 6 | 真实 DeepSeek 能力 + 可选 Judge |
 | `evalsets/retrieval_v1.yaml` | — | 3 | 检索 Recall@K / MRR 消融（无 LLM） |
 | `evalsets/reliability_v1.yaml` | `fake` | 3 | **故障恢复** + 不可信文档；非 Fake Model 的 `pass^k` 策略稳定性 |
@@ -32,7 +32,7 @@
 - **隔离**：每次 run 使用独立 `EVIDENCE_STORE_DIR`，关闭 SEC/新闻网络
 - **期望**：code grader（节点到达、字段存在、risk_flags、工具调用等）
 
-能力域覆盖：`orchestration` · `tool` · `evidence` · `memory` · `safety` · `hitl`
+能力域覆盖：`orchestration` · `tool` · `evidence` · `memory` · `safety` · `hitl` · `research`
 
 ### Live 能力（capability_v1）
 
@@ -68,7 +68,7 @@
   judge: true               # Live：是否跑 LLM Judge
 ```
 
-**三层含义：**
+**Case 三部分含义：**
 
 1. **环境层** — symbol、fixture、setup、eval 隔离 env  
 2. **任务层** — `task`、`gate`、`workflow_flags`  
@@ -127,7 +127,7 @@ print(report["judge_summary"])  # Live Judge 汇总
 
 | Job | 命令 | 条件 |
 |-----|------|------|
-| `quality` | `pytest` + `run_eval.py` + `run_retrieval_eval.py` + `run_reliability_eval.py` | 每次 PR/push，**必须全绿** |
+| `quality` | `pytest` + `run_eval.py` + `run_retrieval_eval.py` + `run_reliability_eval.py` | push / PR / 定时 / 手动触发时运行，**必须全绿** |
 | `eval-live` | `python scripts/run_eval.py --live --judge` | 需 `DEEPSEEK_API_KEY` secret；无则 skip |
 
 Artifacts：当前 workflow 上传 `eval-regression-v1` 与 `eval-capability-v1`（JSON + Markdown）；`retrieval_v1` / `reliability_v1` 在 job 内生成 JSON 报告并参与阻断。
@@ -172,7 +172,7 @@ python scripts/run_reliability_eval.py
 
 | Case | 测什么 |
 |------|--------|
-| `reli_stable_full_chain` | harness 基线（单次） |
+| `reli_stable_full_chain` | 工作流控制面基线（单次） |
 | `reli_tool_timeout_retry` | 工具 timeout 注入 + retry（重复 3 次验证恢复一致） |
 | `reli_untrusted_doc_ignored` | 检索文档含恶意指令，断言不调用 `submit_paper_order` |
 

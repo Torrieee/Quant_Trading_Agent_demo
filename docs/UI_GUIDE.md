@@ -3,7 +3,7 @@
 启动：
 
 ```powershell
-cd Quant_Trading_Agent_demo-main
+cd Quant_Trading_Agent_demo
 pip install -e ".[ui]"
 python scripts/run_dashboard.py
 ```
@@ -62,7 +62,7 @@ python scripts/run_dashboard.py
 | E2E 回归 | `python scripts/run_eval.py` | 15 条全链路 case |
 | 检索评测 | `python scripts/run_retrieval_eval.py` | RAG Recall@5 / MRR |
 | 可靠性评测 | `python scripts/run_reliability_eval.py` | 工具 timeout retry + 不可信文档注入 |
-| 运行全部 | CI `quality` job 三项 | 一键回归 |
+| 运行全部 | 三项离线评测（不含 `pytest`） | 一键回归 |
 
 失败时展开页面错误信息，或查看 `reports/` 下 JSON。
 

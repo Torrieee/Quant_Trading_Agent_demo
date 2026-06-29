@@ -210,7 +210,7 @@ src/quant_agent/
 
 ## 9. 约束（长期）
 
-- 编排：**LangGraph** 固定拓扑；Research / Risk：**ReAct**
+- 编排：**LangGraph** 固定拓扑；Research 默认 **ReAct**、可切动态子图；Risk 使用 **ReAct**
 - 披露：**US / SEC** 为主，暂不做 A 股
 - 代码注释偏好中文
 - 产品入口统一 `QuantEngine`，评测统一 `AgentEvalRunner`

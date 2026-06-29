@@ -5,7 +5,7 @@
 | [SHOWCASE_TRACE.md](SHOWCASE_TRACE.md) | 韧性演示 trace + Trace 分析 |
 | [UI_GUIDE.md](UI_GUIDE.md) | Streamlit 控制台测试步骤 |
 | [../README.md](../README.md) | 项目总览、快速开始、CI、命令速查 |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | 多智能体架构、数据流、模块职责 |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Agentic Workflow 架构、数据流、模块职责 |
 | [EVAL.md](EVAL.md) | Agent 评测框架：数据集、graders、CI、Live |
 | [UPDATE_LOG.md](UPDATE_LOG.md) | 版本演进与选型记录（最新在前） |
 

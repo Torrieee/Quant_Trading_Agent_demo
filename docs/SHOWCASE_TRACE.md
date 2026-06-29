@@ -5,7 +5,7 @@
 ## 生成
 
 ```powershell
-cd Quant_Trading_Agent_demo-main
+cd Quant_Trading_Agent_demo
 python scripts/run_showcase_trace.py
 ```
 
@@ -28,7 +28,7 @@ python scripts/run_showcase_trace.py
 7. Risk 前 **HITL interrupt**
 8. `resume(human_approval=pass)` → Reporter 完成报告
 
-## 在线 Trace 分析
+## 本地 Trace 分析
 
 ```powershell
 python scripts/run_trace_analysis.py

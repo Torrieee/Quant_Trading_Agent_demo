@@ -14,7 +14,7 @@
 - `regression_v1` 新增 `mem_current_evidence_over_prior`（15 条）
 
 **为什么改**
-- 评审反馈：概念表述须与代码一致；Fake Model 测 harness，Live 测 policy；确定性 pass^k 信息量低
+- 评审反馈：概念表述须与代码一致；Fake Model 测工作流控制面，Live 测 policy；确定性 pass^k 信息量低
 
 ---
 
@@ -69,12 +69,12 @@
 
 **为什么改**
 - 需要可复现的 **E2E agent 回归**（CI 阻断）与 **Live 能力评估**（相对门槛，非绝对 100%）
-- 评测对象统一为 `QuantEngine`，与 Harness 工具契约评估分离
+- 评测对象统一为 `QuantEngine`，与旧工具契约评估分离
 
 **怎么做 / 选型**
 - 离线层：`RoleAwareFakeModel` + code grader，PR 必跑、零 API 成本
 - Live 层：`min_pass_rate: 0.67`；Judge 默认 `require_judge: false`（记分不阻断）
-- 未把 Harness pilot 并入 eval：口径不同，两套 CI 并行
+- 当时未把旧 pilot benchmark 并入 eval：口径不同，先并行保留
 
 ---
 
@@ -166,7 +166,7 @@
 
 **改了什么**
 - 删除旧 `runtime/nodes/*`、`RAGSystem`、`LLMTradingAgent`、冗余 examples
-- 保留：`runtime/runner.py`（Harness）、`demo.py`、`examples_multi_agent.py`
+- 保留：`runtime/runner.py`（兼容执行器）、`demo.py`、`examples_multi_agent.py`
 - 移除未用依赖：`langchain`、`langchain-community`、`faiss-cpu`
 
 **为什么改**
@@ -174,7 +174,7 @@
 - 产品入口统一为 `QuantEngine` + `agents/coordinator`
 
 **怎么做 / 选型**
-- 只删无引用路径；Harness 评估环路与产品 analyze 分离保留
+- 只删无引用路径；旧评估环路与产品 analyze 分离保留
 
 ---
 
@@ -225,7 +225,7 @@
 
 **怎么做 / 选型**
 - 显式 scoring 表 + 可调权重，结果可解释、可单测
-- 未让 LLM 直接「拍策略」：保留工具输出结构化，便于 Harness 评估
+- 未让 LLM 直接「拍策略」：保留工具输出结构化，便于评测
 
 ---
 

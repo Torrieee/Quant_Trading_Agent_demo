@@ -23,7 +23,7 @@ def render_eval_page() -> None:
     run_ret = col2.button("检索评测", use_container_width=True)
     run_rel = col3.button("可靠性评测", use_container_width=True)
 
-    run_all = st.button("运行全部（与 CI quality job 一致）", use_container_width=True)
+    run_all = st.button("运行全部（三项离线评测）", use_container_width=True)
 
     if not (run_reg or run_ret or run_rel or run_all):
         st.info("点击上方按钮运行评测。")
