@@ -73,9 +73,9 @@ python scripts/run_eval.py
 ```bash
 # .env 中设置 DEEPSEEK_API_KEY
 python examples_multi_agent.py
-# 或
-python scripts/run_runtime_agent.py --task "分析 AAPL 震荡市策略与仓位"
 ```
+
+`scripts/run_runtime_agent.py` 是内部 runtime case 联调入口，当前不作为快速开始推荐命令；日常在线分析请使用 `examples_multi_agent.py` 或直接调用 `QuantEngine`。
 
 ### 2.4 Streamlit 可视化
 
@@ -86,6 +86,7 @@ python scripts/run_dashboard.py
 
 - **Demo 模式**：本地 fixture + 模拟 LLM，无需 API Key  
 - **在线模式**：配置 `DEEPSEEK_API_KEY` 后关闭 Demo 开关
+- 如果使用 `requirements.txt` 安装，Streamlit 已包含；如果使用 `pip install -e ".[dev]"`，运行看板前需额外安装 `".[ui]"`。
 
 ---
 
@@ -159,6 +160,8 @@ Quant_Trading_Agent_demo/
 
 ### 6.1 QuantEngine（多智能体）
 
+需配置 `DEEPSEEK_API_KEY`，或在代码中注入兼容的 chat model。
+
 ```python
 from quant_agent import QuantEngine
 
@@ -171,7 +174,9 @@ print(result.decision, result.report)
 print(result.agents_visited, result.trace_steps)
 ```
 
-### 6.1 TradingAgent（经典回测）
+### 6.2 TradingAgent（经典回测）
+
+该入口会下载行情数据。建议配置 `FMP_API_KEY`，或确保 OpenBB / yfinance 数据源在当前网络环境可用。
 
 ```python
 from quant_agent import TradingAgent, AgentConfig, DataConfig, StrategyConfig, BacktestConfig
@@ -207,6 +212,7 @@ print(report["scorecard"]["summary"])
 | `EVIDENCE_FETCH_SEC` | SEC 披露拉取（默认 1；单测/CI eval 自动关） |
 | `EVIDENCE_SEARCH_MODE` | `tfidf` / `hybrid` / `embedding` |
 | `LANGGRAPH_CHECKPOINT` | `sqlite` / `memory` / `none` |
+| `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` | 可选 trace 上报；启用前需自行安装 `langfuse` |
 
 ---
 
@@ -214,16 +220,20 @@ print(report["scorecard"]["summary"])
 
 | 命令 | 说明 |
 |------|------|
-| `python demo.py` | 经典规则 Agent 回测 |
-| `python scripts/run_agent.py --symbol AAPL` | 单策略 CLI 回测 |
-| `python scripts/tune_agent.py` | 网格搜索调参 |
-| `python scripts/run_runtime_agent.py` | 手动 DeepSeek 联调 |
+| `python demo.py` | 经典规则 Agent 回测；需要可用行情数据源 |
+| `python scripts/run_agent.py --symbol AAPL` | 单策略 CLI 回测；需要可用行情数据源 |
+| `python scripts/tune_agent.py` | 网格搜索调参；需要可用行情数据源 |
 
 ---
 
 ## 9. 技术栈
 
-Python 3.11+ · pandas · numpy · LangGraph · LangChain-OpenAI（DeepSeek 兼容）· OpenBB / yfinance · scikit-learn · pydantic · pytest · Streamlit（可选 UI）
+Python 3.11+ · pandas · numpy · LangGraph · LangChain-OpenAI（DeepSeek 兼容）· OpenBB / yfinance · scikit-learn · pydantic · pytest · Streamlit（UI，可通过 `.[ui]` 安装）
+
+可选能力：
+
+- Embedding 后端：`pip install -e ".[embedding]"`
+- Langfuse trace 上报：`pip install langfuse` 后配置 `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY`
 
 ---
 
